@@ -1,0 +1,28 @@
+package com.example.documentsend.ui.theme
+
+import androidx.compose.ui.graphics.Color
+
+val purple_200 = Color(0xFFBB86FC)
+val purple_500 = Color(0xFF6200EE)
+val purple_700 = Color(0xFF3700B3)
+val teal_200 = Color(0xFF03DAC5)
+val teal_700 = Color(0xFF018786)
+val black = Color(0xFF000000)
+val white = Color(0xFFFFFFFF)
+val red = Color(0xFFFF0000)
+val blue = Color(0xFF0000FF)
+val green = Color(0xFF008000)
+val yellow = Color(0xFFFFFF00)
+val orange = Color(0xFFFFA500)
+val gold = Color(0xFFFFD700)
+val gray = Color(0xFF808080)
+val pink = Color(0xFFFFC0CB)
+val lime = Color(0xFF00FF00)
+val dark_blue = Color(0xFF00008B)
+val royal_blue = Color(0xFF4169E1)
+val light_blue = Color(0xFFADD8E6)
+val sky_blue = Color(0xFF87CEEB)
+val purple = Color(0xFF800080)
+val lavender = Color(0xFFE6E6FA)
+val brown = Color(0xFFA52A2A)
+val coffee = Color(0xFF6F4E37)

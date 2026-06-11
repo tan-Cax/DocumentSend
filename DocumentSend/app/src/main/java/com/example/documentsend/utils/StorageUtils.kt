@@ -1,0 +1,61 @@
+package com.example.documentsend.utils
+
+import android.content.Context
+import android.os.Environment
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
+object StorageUtils {
+
+    fun getDownloadDir(context: Context): File {
+        val dir = File(
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+            "DocumentSend"
+        )
+        if (!dir.exists()) {
+            dir.mkdirs()
+        }
+        return dir
+    }
+
+    fun getUniqueFile(dir: File, fileName: String): File {
+        val file = File(dir, fileName)
+        if (!file.exists()) return file
+
+        val nameWithoutExt = fileName.substringBeforeLast(".")
+        val ext = fileName.substringAfterLast(".", "")
+        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+
+        val newName = if (ext.isNotEmpty()) "${nameWithoutExt}_${timestamp}.${ext}" else "${nameWithoutExt}_${timestamp}"
+        return File(dir, newName)
+    }
+
+    fun formatFileSize(bytes: Long): String {
+        return when {
+            bytes < 1024 -> "$bytes B"
+            bytes < 1024 * 1024 -> String.format("%.1f KB", bytes / 1024.0)
+            bytes < 1024 * 1024 * 1024 -> String.format("%.1f MB", bytes / (1024.0 * 1024))
+            else -> String.format("%.2f GB", bytes / (1024.0 * 1024 * 1024))
+        }
+    }
+
+    fun getPartialFile(dir: File, fileName: String): File {
+        return File(dir, "${fileName}.partial")
+    }
+
+    fun deletePartial(dir: File, fileName: String) {
+        getPartialFile(dir, fileName).delete()
+    }
+
+    fun renameToFinal(dir: File, fileName: String): Boolean {
+        val partial = getPartialFile(dir, fileName)
+        val finalFile = File(dir, fileName)
+        return partial.renameTo(finalFile)
+    }
+
+    fun hasPartialFile(dir: File, fileName: String): Boolean {
+        return getPartialFile(dir, fileName).exists()
+    }
+}
