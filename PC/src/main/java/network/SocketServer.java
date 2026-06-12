@@ -1,6 +1,7 @@
 package network;
 
 import listener.INetworkListener;
+import network.handler.receive.FileReceiveHandler;
 import network.handler.receive.IReceiveHandler;
 import network.handler.receive.TextReceiveHandler;
 import protocol.PacketHeader;
@@ -22,6 +23,10 @@ public class SocketServer {
     public SocketServer() {
         // 注册接收处理器
         receiveHandlers.put(PacketType.TEXT, new TextReceiveHandler());
+        receiveHandlers.put(PacketType.FILE, new FileReceiveHandler());
+        receiveHandlers.put(PacketType.IMAGE, new FileReceiveHandler());
+        receiveHandlers.put(PacketType.VIDEO, new FileReceiveHandler());
+        receiveHandlers.put(PacketType.ARCHIVE, new FileReceiveHandler());
     }
 
     public void startReading(Socket socket, INetworkListener listener) {

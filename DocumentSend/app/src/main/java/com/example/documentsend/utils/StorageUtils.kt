@@ -1,7 +1,11 @@
 package com.example.documentsend.utils
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Environment
+import androidx.core.content.ContextCompat
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -9,11 +13,20 @@ import java.util.Locale
 
 object StorageUtils {
 
+    /** 检查是否有存储权限（Android 11+ 需要 MANAGE_EXTERNAL_STORAGE） */
+    fun hasStoragePermission(context: Context): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            Environment.isExternalStorageManager()
+        } else {
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+
     fun getDownloadDir(context: Context): File {
-        val dir = File(
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-            "DocumentSend"
-        )
+        val dir = NetworkConfigUtils.getCurrentSavePath(context)
         if (!dir.exists()) {
             dir.mkdirs()
         }

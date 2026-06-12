@@ -1,5 +1,7 @@
 package listener;
 
+import java.io.File;
+
 public interface INetworkListener {
     /**
      * 当客户端成功连接时触发
@@ -18,5 +20,15 @@ public interface INetworkListener {
      */
     void onTextMessage(String text);
 
-    // TODO: 后续添加接收文件、进度更新等回调方法
+    /**
+     * 收到文件时触发
+     * @param file 接收到的本地文件
+     */
+    void onFileReceived(File file);
+
+    /**
+     * 文件发送完成时触发
+     * @param file 已发送的文件
+     */
+    void onFileSent(File file);
 }

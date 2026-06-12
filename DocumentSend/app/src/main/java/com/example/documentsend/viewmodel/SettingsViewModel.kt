@@ -45,6 +45,21 @@ class SettingsViewModel(application: Application) :
                 settingsState = settingsState.copy(saveToHistory = enabled)
             }
         }
+        viewModelScope.launch {
+            settingsRepository.sendPortFlow.collect { port ->
+                settingsState = settingsState.copy(sendPort = port)
+            }
+        }
+        viewModelScope.launch {
+            settingsRepository.receivePortFlow.collect { port ->
+                settingsState = settingsState.copy(receivePort = port)
+            }
+        }
+        viewModelScope.launch {
+            settingsRepository.savePathFlow.collect { path ->
+                settingsState = settingsState.copy(savePath = path)
+            }
+        }
     }
 
     fun updateUserName(name: String) {
@@ -74,6 +89,30 @@ class SettingsViewModel(application: Application) :
     fun updateSaveToHistory(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepository.setSaveToHistory(enabled)
+        }
+    }
+
+    fun updateSendPort(port: Int) {
+        viewModelScope.launch {
+            settingsRepository.setSendPort(port)
+        }
+    }
+
+    fun updateReceivePort(port: Int) {
+        viewModelScope.launch {
+            settingsRepository.setReceivePort(port)
+        }
+    }
+
+    fun updateSavePath(path: String) {
+        viewModelScope.launch {
+            settingsRepository.setSavePath(path)
+        }
+    }
+
+    fun resetSavePath() {
+        viewModelScope.launch {
+            settingsRepository.setSavePath("")
         }
     }
 }

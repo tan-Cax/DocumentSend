@@ -84,6 +84,11 @@ class DocViewModel(application: Application) :
         viewModelScope.launch {
             settingsRepository.saveToHistoryFlow.collect { saveToHistory = it }
         }
+        viewModelScope.launch {
+            settingsRepository.sendPortFlow.collect { port ->
+                fileState = fileState.copy(port = port)
+            }
+        }
     }
 
     fun startServer(port: Int) {

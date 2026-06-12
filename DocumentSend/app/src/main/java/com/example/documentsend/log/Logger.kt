@@ -31,11 +31,13 @@ object Logger {
 
     /** 输出 DEBUG 级别日志，使用默认 TAG */
     fun d(message: String) {
+        if (!isDebug) return
         log("D", message)
     }
 
     /** 输出 DEBUG 级别日志，使用自定义 TAG */
     fun d(tag: String, message: String) {
+        if (!isDebug) return
         log("D", tag, message)
     }
 

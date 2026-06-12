@@ -82,7 +82,6 @@ fun AppNavigation() {
         composable(
             route = Screen.Log.route
         ){
-            val historyViewModel: HistoryViewModel = viewModel()
             Log(
                 navController = navController
             )

@@ -23,6 +23,9 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
         val AUTO_SAVE_KEY = booleanPreferencesKey("auto_save")
         val COLOR_SCHEME_KEY = stringPreferencesKey("color_scheme")
         val SAVE_TO_HISTORY_KEY = booleanPreferencesKey("save_to_history")
+        val SEND_PORT_KEY = intPreferencesKey("send_port")
+        val RECEIVE_PORT_KEY = intPreferencesKey("receive_port")
+        val SAVE_PATH_KEY = stringPreferencesKey("save_path")
     }
 
     val themeModeFlow: Flow<Int> = dataStore.data.map { preferences ->
@@ -47,6 +50,18 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
 
     val saveToHistoryFlow: Flow<Boolean> = dataStore.data.map { preferences ->
         preferences[SAVE_TO_HISTORY_KEY] ?: true
+    }
+
+    val sendPortFlow: Flow<Int> = dataStore.data.map { preferences ->
+        preferences[SEND_PORT_KEY] ?: 6666
+    }
+
+    val receivePortFlow: Flow<Int> = dataStore.data.map { preferences ->
+        preferences[RECEIVE_PORT_KEY] ?: 50000
+    }
+
+    val savePathFlow: Flow<String> = dataStore.data.map { preferences ->
+        preferences[SAVE_PATH_KEY] ?: ""
     }
 
     suspend fun setThemeMode(mode: Int) {
@@ -82,6 +97,24 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
     suspend fun setSaveToHistory(enabled: Boolean) {
         dataStore.edit { preferences ->
             preferences[SAVE_TO_HISTORY_KEY] = enabled
+        }
+    }
+
+    suspend fun setSendPort(port: Int) {
+        dataStore.edit { preferences ->
+            preferences[SEND_PORT_KEY] = port
+        }
+    }
+
+    suspend fun setReceivePort(port: Int) {
+        dataStore.edit { preferences ->
+            preferences[RECEIVE_PORT_KEY] = port
+        }
+    }
+
+    suspend fun setSavePath(path: String) {
+        dataStore.edit { preferences ->
+            preferences[SAVE_PATH_KEY] = path
         }
     }
 }

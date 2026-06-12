@@ -7,7 +7,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-public class TextReceiveHandler implements IReceiveHandler {
+public class  TextReceiveHandler implements IReceiveHandler {
 
     @Override
     public void handleReceive(PacketHeader header, DataInputStream dis, INetworkListener listener) throws IOException {

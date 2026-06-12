@@ -242,8 +242,10 @@ fun Send(navController: NavController,
                     }
 
                     // 传输
-                    // 功能未完善，此处待补全
-                    viewModel.sendText()
+                    when (state.packetType) {
+                        PacketType.TEXT -> viewModel.sendText()
+                        else -> viewModel.sendFile()  // IMAGE, VIDEO, FILE, ARCHIVE
+                    }
                     viewModel.updateTransferType(null)
                 },
                 modifier = Modifier

@@ -65,6 +65,12 @@ fun Settings(
     // 弹窗控制
     var showUserNameDialog by remember { mutableStateOf(false) }
     var dialogInput by remember { mutableStateOf(settingsState.userName) }
+    var showSendPortDialog by remember { mutableStateOf(false) }
+    var sendPortInput by remember { mutableStateOf(settingsState.sendPort.toString()) }
+    var showReceivePortDialog by remember { mutableStateOf(false) }
+    var receivePortInput by remember { mutableStateOf(settingsState.receivePort.toString()) }
+    var showSavePathDialog by remember { mutableStateOf(false) }
+    var savePathInput by remember { mutableStateOf(settingsState.savePath) }
 
     // 主题模式映射
     val themeModeOptions = listOf("白天", "黑夜", "跟随系统")
@@ -158,6 +164,69 @@ fun Settings(
                     }
                 }
 
+                // 发送端口
+                item {
+                    SettingRow(label = "发送端口") {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable {
+                                    sendPortInput = settingsState.sendPort.toString()
+                                    showSendPortDialog = true
+                                }
+                                .padding(horizontal = 12.dp, vertical = 8.dp)
+                        ) {
+                            Text(
+                                text = settingsState.sendPort.toString(),
+                                fontSize = 14.sp,
+                                color = Color.Gray
+                            )
+                        }
+                    }
+                }
+
+                // 接收端口
+                item {
+                    SettingRow(label = "接收端口") {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable {
+                                    receivePortInput = settingsState.receivePort.toString()
+                                    showReceivePortDialog = true
+                                }
+                                .padding(horizontal = 12.dp, vertical = 8.dp)
+                        ) {
+                            Text(
+                                text = settingsState.receivePort.toString(),
+                                fontSize = 14.sp,
+                                color = Color.Gray
+                            )
+                        }
+                    }
+                }
+
+                // 存储路径
+                item {
+                    SettingRow(label = "存储路径") {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable {
+                                    savePathInput = settingsState.savePath
+                                    showSavePathDialog = true
+                                }
+                                .padding(horizontal = 12.dp, vertical = 8.dp)
+                        ) {
+                            Text(
+                                text = if (settingsState.savePath.isEmpty()) "默认" else settingsState.savePath,
+                                fontSize = 14.sp,
+                                color = Color.Gray
+                            )
+                        }
+                    }
+                }
+
                 // 关于我们
                 item {
                     SettingRow(label = "关于我们") {
@@ -239,6 +308,126 @@ fun Settings(
             dismissButton = {
                 TextButton(
                     onClick = { showUserNameDialog = false }
+                ) {
+                    Text("取消")
+                }
+            }
+        )
+    }
+
+    // 修改发送端口弹窗
+    if (showSendPortDialog) {
+        AlertDialog(
+            onDismissRequest = { showSendPortDialog = false },
+            title = { Text(text = "设置发送端口", fontWeight = FontWeight.Bold) },
+            text = {
+                OutlinedTextField(
+                    value = sendPortInput,
+                    onValueChange = { sendPortInput = it },
+                    placeholder = { Text("请输入端口号") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val port = sendPortInput.toIntOrNull()
+                        if (port != null && port in 1..65535) {
+                            viewModel.updateSendPort(port)
+                            showSendPortDialog = false
+                        } else {
+                            Toast.makeText(context, "端口号无效", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                ) {
+                    Text("确认")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showSendPortDialog = false }
+                ) {
+                    Text("取消")
+                }
+            }
+        )
+    }
+
+    // 修改接收端口弹窗
+    if (showReceivePortDialog) {
+        AlertDialog(
+            onDismissRequest = { showReceivePortDialog = false },
+            title = { Text(text = "设置接收端口", fontWeight = FontWeight.Bold) },
+            text = {
+                OutlinedTextField(
+                    value = receivePortInput,
+                    onValueChange = { receivePortInput = it },
+                    placeholder = { Text("请输入端口号") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val port = receivePortInput.toIntOrNull()
+                        if (port != null && port in 1..65535) {
+                            viewModel.updateReceivePort(port)
+                            showReceivePortDialog = false
+                        } else {
+                            Toast.makeText(context, "端口号无效", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                ) {
+                    Text("确认")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showReceivePortDialog = false }
+                ) {
+                    Text("取消")
+                }
+            }
+        )
+    }
+
+    // 修改存储路径弹窗
+    if (showSavePathDialog) {
+        AlertDialog(
+            onDismissRequest = { showSavePathDialog = false },
+            title = { Text(text = "设置存储路径", fontWeight = FontWeight.Bold) },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = savePathInput,
+                        onValueChange = { savePathInput = it },
+                        placeholder = { Text("留空使用默认路径") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "默认路径: /storage/emulated/0/Download/DocumentSend",
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.updateSavePath(savePathInput.trim())
+                        showSavePathDialog = false
+                    }
+                ) {
+                    Text("确认")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showSavePathDialog = false }
                 ) {
                     Text("取消")
                 }
