@@ -8,6 +8,9 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -21,7 +24,7 @@ public class FileTransferPage extends StackPane {
     private final TextField ipField = new TextField();
     private final TextField portField = new TextField();
     private final Label filePathLabel = new Label("未选择文件");
-    private final TextArea logArea = new TextArea();
+    private final TextFlow logFlow = new TextFlow();
     private final VBox dropZone = new VBox(10);
     private File selectedFile;
 
@@ -117,13 +120,13 @@ public class FileTransferPage extends StackPane {
         sendBtn.setPrefHeight(40);
         sendBtn.setOnAction(e -> {
             if (selectedFile == null) {
-                logArea.appendText("[错误] 请先选择文件\n");
+                appendError("请先选择文件");
                 return;
             }
             String targetIp = ipField.getText().trim();
             int targetPort = Integer.parseInt(portField.getText().trim());
 
-            logArea.appendText("[发送] " + selectedFile.getName() + " → " + targetIp + ":" + targetPort + "\n");
+            appendText("[发送] " + selectedFile.getName() + " → " + targetIp + ":" + targetPort, Color.BLACK);
 
             SocketClient sender = new SocketClient();
             sender.sendFileTo(selectedFile, targetIp, targetPort);
@@ -133,16 +136,31 @@ public class FileTransferPage extends StackPane {
         btnBar.setAlignment(Pos.CENTER);
 
         // 日志区
-        logArea.setEditable(false);
-        logArea.setWrapText(true);
-        logArea.setStyle("-fx-font-family: 'Consolas'; -fx-font-size: 13px;");
-        logArea.setPrefHeight(120);
-        VBox.setVgrow(logArea, Priority.ALWAYS);
+        logFlow.setStyle("-fx-font-family: 'Consolas'; -fx-font-size: 13px; -fx-padding: 5;");
+        ScrollPane scrollPane = new ScrollPane(logFlow);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setPrefHeight(120);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
+        VBox.setVgrow(scrollPane, Priority.ALWAYS);
 
-        layout.getChildren().addAll(targetBar, dropZone, btnBar, logArea);
+        layout.getChildren().addAll(targetBar, dropZone, btnBar, scrollPane);
         getChildren().add(layout);
 
         Platform.runLater(() -> this.requestFocus());
+    }
+
+    private void appendText(String msg, Color color) {
+        Text text = new Text(msg + "\n");
+        text.setFill(color);
+        logFlow.getChildren().add(text);
+    }
+
+    public void appendReceivedFile(String fileName) {
+        appendText("[接收] " + fileName, Color.BLACK);
+    }
+
+    public void appendError(String msg) {
+        appendText("[错误] " + msg, Color.RED);
     }
 
     private void deselectOnFocus(TextField field) {

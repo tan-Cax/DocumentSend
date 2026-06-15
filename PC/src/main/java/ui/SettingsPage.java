@@ -47,6 +47,17 @@ public class SettingsPage extends StackPane {
         pathLabel.setStyle("-fx-text-fill: #666; -fx-font-size: 14px;");
         Button changePath = new Button("更改");
         changePath.setStyle("-fx-font-size: 14px;");
+        changePath.setOnAction(e -> {
+            DirectoryChooser chooser = new DirectoryChooser();
+            chooser.setTitle("选择存储目录");
+            File current = new File(AppConfig.getSaveDir());
+            if (current.exists()) chooser.setInitialDirectory(current);
+            File selected = chooser.showDialog(this.getScene().getWindow());
+            if (selected != null) {
+                AppConfig.setSaveDir(selected.getAbsolutePath());
+                pathLabel.setText(selected.getAbsolutePath());
+            }
+        });
 
         Label lblUser = new Label("用户名:");
         lblUser.setStyle("-fx-font-size: 14px;");

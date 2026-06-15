@@ -4,11 +4,14 @@ import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import network.SocketClient;
 import utils.AppConfig;
 
 public class MessagePage extends StackPane {
-    private final TextArea chatArea = new TextArea();
+    private final TextFlow chatFlow = new TextFlow();
 
     public MessagePage() {
         this.setFocusTraversable(true);
@@ -50,7 +53,7 @@ public class MessagePage extends StackPane {
             String targetIp = ipField.getText().trim();
             int targetPort = Integer.parseInt(portField.getText().trim());
 
-            chatArea.appendText("[我] " + msg + "\n");
+            appendText("[我] " + msg, Color.BLACK);
             inputArea.clear();
 
             SocketClient sender = new SocketClient();
@@ -62,14 +65,29 @@ public class MessagePage extends StackPane {
         VBox.setVgrow(sendBar, Priority.NEVER);
 
         // 消息显示区
-        chatArea.setEditable(false);
-        chatArea.setWrapText(true);
-        chatArea.setStyle("-fx-font-family: 'Consolas'; -fx-font-size: 13px;");
-        VBox.setVgrow(chatArea, Priority.ALWAYS);
+        chatFlow.setStyle("-fx-font-family: 'Consolas'; -fx-font-size: 13px; -fx-padding: 5;");
+        ScrollPane scrollPane = new ScrollPane(chatFlow);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
+        VBox.setVgrow(scrollPane, Priority.ALWAYS);
 
-        layout.getChildren().addAll(targetBar, sendBar, chatArea);
+        layout.getChildren().addAll(targetBar, sendBar, scrollPane);
         getChildren().add(layout);
 
         Platform.runLater(() -> this.requestFocus());
+    }
+
+    private void appendText(String msg, Color color) {
+        Text text = new Text(msg + "\n");
+        text.setFill(color);
+        chatFlow.getChildren().add(text);
+    }
+
+    public void appendReceivedText(String text) {
+        appendText("[对方] " + text, Color.BLACK);
+    }
+
+    public void appendError(String msg) {
+        appendText("[错误] " + msg, Color.RED);
     }
 }

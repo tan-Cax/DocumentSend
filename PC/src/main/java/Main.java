@@ -1,7 +1,9 @@
 import javafx.application.Application;
+import javafx.application.Platform;
 import listener.INetworkListener;
 import network.SocketConnectionManager;
 import ui.App;
+import ui.MainLayout;
 import utils.AppConfig;
 import utils.NetworkUtils;
 
@@ -42,11 +44,19 @@ public class Main {
             @Override
             public void onTextMessage(String text) {
                 System.out.println(">>> 收到文本消息: " + text);
+                Platform.runLater(() -> {
+                    MainLayout ml = MainLayout.getInstance();
+                    if (ml != null) ml.getMessagePage().appendReceivedText(text);
+                });
             }
 
             @Override
             public void onFileReceived(File file) {
                 System.out.println(">>> 收到文件: " + file.getName() + " (" + file.length() + " bytes)");
+                Platform.runLater(() -> {
+                    MainLayout ml = MainLayout.getInstance();
+                    if (ml != null) ml.getFilePage().appendReceivedFile(file.getName());
+                });
             }
 
             @Override

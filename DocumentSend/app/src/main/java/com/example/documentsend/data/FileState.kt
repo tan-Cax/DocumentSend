@@ -15,5 +15,10 @@ data class FileState (
     val transferProgress: TransferProgress = TransferProgress(),
     val localIpAddress: String = "",  // 本地IP地址
     val userName: String = "默认用户",  // 用户名
-    val port: Int = 6666  // 端口号，端口为计算机上的开放端口，已经配置完毕，硬编码写死
+    val port: Int = 6666,  // 端口号，端口为计算机上的开放端口，已经配置完毕，硬编码写死
+    val autoSave: Boolean = false, // 自动保存
+    val pendingSaveHistoryId: Int = -1,     // 待保存的记录ID
+    val pendingSaveFileName: String = "",  // 待保存的文件名
+    val pendingSaveFileSize: Long = 0,     // 待保存的文件大小
+    val pendingSaveTempPath: String = ""   // 待保存的临时路径
 )

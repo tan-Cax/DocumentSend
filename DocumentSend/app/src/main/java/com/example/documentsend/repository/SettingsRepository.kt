@@ -26,6 +26,7 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
         val SEND_PORT_KEY = intPreferencesKey("send_port")
         val RECEIVE_PORT_KEY = intPreferencesKey("receive_port")
         val SAVE_PATH_KEY = stringPreferencesKey("save_path")
+        val TARGET_IP_KEY = stringPreferencesKey("target_ip")
     }
 
     val themeModeFlow: Flow<Int> = dataStore.data.map { preferences ->
@@ -62,6 +63,10 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
 
     val savePathFlow: Flow<String> = dataStore.data.map { preferences ->
         preferences[SAVE_PATH_KEY] ?: ""
+    }
+
+    val targetIpFlow: Flow<String> = dataStore.data.map { preferences ->
+        preferences[TARGET_IP_KEY] ?: ""
     }
 
     suspend fun setThemeMode(mode: Int) {
@@ -115,6 +120,12 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
     suspend fun setSavePath(path: String) {
         dataStore.edit { preferences ->
             preferences[SAVE_PATH_KEY] = path
+        }
+    }
+
+    suspend fun setTargetIp(ip: String) {
+        dataStore.edit { preferences ->
+            preferences[TARGET_IP_KEY] = ip
         }
     }
 }

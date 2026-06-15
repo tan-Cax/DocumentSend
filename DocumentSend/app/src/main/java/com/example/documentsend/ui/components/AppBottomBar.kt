@@ -20,12 +20,13 @@ import com.example.documentsend.ui.theme.royal_blue
 data class BottomNavItem(val route: String, val label: String, val icon: ImageVector)
 
 @Composable
+
 fun AppBottomBar(currentRoute: String?, onNavigate: (String) -> Unit) {
     val items = listOf(
         BottomNavItem(Screen.Home.route, "Home", Icons.Filled.Home),
         BottomNavItem(Screen.Send.route, "Send", Icons.Filled.Send),
         BottomNavItem(Screen.Receive.route, "Receive", Icons.Filled.ArrowDropDown),
-        BottomNavItem(Screen.Receive.route, "Settings", Icons.Filled.Settings)
+        BottomNavItem(Screen.Settings.route, "Settings", Icons.Filled.Settings)
     )
     NavigationBar(containerColor = Color.White) {
         items.forEach { item ->

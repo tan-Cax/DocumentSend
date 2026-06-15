@@ -2,12 +2,17 @@ package com.example.documentsend.ui.view
 
 import android.app.AlertDialog
 import android.net.Uri
+import android.view.Gravity
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -15,7 +20,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -25,32 +33,52 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.documentsend.R
+import com.example.documentsend.data.History
+import com.example.documentsend.data.HistoryType
 import com.example.documentsend.network.PacketType
 import com.example.documentsend.ui.components.MainScaffold
 import com.example.documentsend.ui.theme.blue
-import com.example.documentsend.ui.theme.sky_blue
+import com.example.documentsend.ui.theme.dark_blue
+import com.example.documentsend.ui.theme.light_blue
+import com.example.documentsend.ui.theme.light_gray
+import com.example.documentsend.ui.theme.very_light_gray
 import com.example.documentsend.ui.theme.white
+import com.example.documentsend.utils.HistoryUtils
 import com.example.documentsend.viewmodel.DocViewModel
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Send(navController: NavController,
          viewModel: DocViewModel) {
     val state = viewModel.fileState
     val clipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
+    var showDialog by remember { mutableStateOf(false) }
+    var dialogMessage by remember { mutableStateOf("") }
 
     val filePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -60,7 +88,8 @@ fun Send(navController: NavController,
 
     LaunchedEffect(Unit) {
         viewModel.uiEvent.collect { message ->
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            dialogMessage = message
+            showDialog = true
         }
     }
 
@@ -72,20 +101,21 @@ fun Send(navController: NavController,
         Column(
             modifier = Modifier
                 .background(white)
-                .fillMaxSize(),
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.Top
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()), // 超出屏幕宽度时允许左右滚动
+                    .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Button(
                     onClick = {
                         viewModel.updateTransferType(PacketType.TEXT)
                         navController.navigate("text") },
-                    colors = ButtonDefaults.buttonColors(containerColor = sky_blue),
+                    colors = ButtonDefaults.buttonColors(containerColor = very_light_gray, contentColor = dark_blue),
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.size(80.dp),
                     contentPadding = PaddingValues(4.dp)
@@ -96,18 +126,16 @@ fun Send(navController: NavController,
                     ) {
                         Icon(Icons.Default.Edit, contentDescription = "文本")
                         Spacer(modifier = Modifier.height(4.dp))
-                        // 文字不换行
                         Text("文本", softWrap = false)
                     }
                 }
-                
+
                 Button(
                     onClick = {
-                        // 打开系统文件选择器，限制只能选择图片类型
                         filePicker.launch("image/*")
                         viewModel.updateTransferType(PacketType.IMAGE)
-                              },
-                    colors = ButtonDefaults.buttonColors(containerColor = sky_blue),
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = very_light_gray, contentColor = dark_blue),
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.size(80.dp),
                     contentPadding = PaddingValues(4.dp)
@@ -127,7 +155,7 @@ fun Send(navController: NavController,
                         val clipboard = clipboardManager.getText()?.text
                         if (!clipboard.isNullOrEmpty()) {
                             viewModel.updateInputMessage(clipboard)
-                            Toast.makeText(context, "粘贴成功", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "粘贴成功", Toast.LENGTH_SHORT).apply { setGravity(Gravity.CENTER, 0, 0) }.show()
                             viewModel.updateTransferType(PacketType.TEXT)
                         }
                         else {
@@ -138,7 +166,7 @@ fun Send(navController: NavController,
                                 .show()
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = sky_blue),
+                    colors = ButtonDefaults.buttonColors(containerColor = very_light_gray, contentColor = dark_blue),
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.size(80.dp),
                     contentPadding = PaddingValues(4.dp)
@@ -155,11 +183,10 @@ fun Send(navController: NavController,
 
                 Button(
                     onClick = {
-                        // 允许选择任意类型的文件
                         filePicker.launch("*/*")
                         viewModel.updateTransferType(PacketType.FILE)
-                        },
-                    colors = ButtonDefaults.buttonColors(containerColor = sky_blue),
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = very_light_gray, contentColor = dark_blue),
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.size(80.dp),
                     contentPadding = PaddingValues(4.dp)
@@ -173,14 +200,13 @@ fun Send(navController: NavController,
                         Text("文件", softWrap = false)
                     }
                 }
-                
+
                 Button(
                     onClick = {
-                        // 允许选择视频类型的文件
                         filePicker.launch("video/*")
                         viewModel.updateTransferType(PacketType.VIDEO)
-                         },
-                    colors = ButtonDefaults.buttonColors(containerColor = sky_blue),
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = very_light_gray, contentColor = dark_blue),
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.size(80.dp),
                     contentPadding = PaddingValues(4.dp)
@@ -194,14 +220,13 @@ fun Send(navController: NavController,
                         Text("视频", softWrap = false)
                     }
                 }
-                
+
                 Button(
                     onClick = {
-                        // 允许选择zip类型的文件
                         filePicker.launch("application/zip")
                         viewModel.updateTransferType(PacketType.ARCHIVE)
-                        },
-                    colors = ButtonDefaults.buttonColors(containerColor = sky_blue),
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = very_light_gray, contentColor = dark_blue),
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.size(80.dp),
                     contentPadding = PaddingValues(4.dp)
@@ -218,7 +243,7 @@ fun Send(navController: NavController,
 
             }
 
-            Spacer(modifier = Modifier.height(32.dp)) // 拉开与下方的距离
+            Spacer(modifier = Modifier.height(32.dp))
 
             OutlinedTextField(
                 value = state.inputIp,
@@ -226,25 +251,23 @@ fun Send(navController: NavController,
                 label = { Text("目标 IP") },
                 modifier = Modifier.fillMaxWidth()
             )
-            
+
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
                 onClick = {
                     if(state.inputIp.isBlank()) {
-                        Toast.makeText(context, "目标IP为空", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "目标IP为空", Toast.LENGTH_SHORT).apply { setGravity(Gravity.CENTER, 0, 0) }.show()
                         return@Button
                     }
-                    // 如果当前没有发送内容则提示选择发送内容
                     if(state.packetType == null) {
-                        Toast.makeText(context, "当前无发送内容", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "当前无发送内容", Toast.LENGTH_SHORT).apply { setGravity(Gravity.CENTER, 0, 0) }.show()
                         return@Button
                     }
 
-                    // 传输
                     when (state.packetType) {
                         PacketType.TEXT -> viewModel.sendText()
-                        else -> viewModel.sendFile()  // IMAGE, VIDEO, FILE, ARCHIVE
+                        else -> viewModel.sendFile()
                     }
                     viewModel.updateTransferType(null)
                 },
@@ -252,13 +275,119 @@ fun Send(navController: NavController,
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = blue)
+                colors = ButtonDefaults.buttonColors(containerColor = light_blue, contentColor = blue)
             ) {
                 Text("发送")
             }
             Text(
                 text = "当前发送类型: ${state.packetType}",
                 modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            var showCopyDialog by remember { mutableStateOf(false) }
+            var selectedRecord by remember { mutableStateOf<History?>(null) }
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .border(1.dp, Color.LightGray)
+                    .background(Color(0xFFFAFAFA))
+                    .padding(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(viewModel.sendSessionRecords) { record ->
+                    val isSend = record.typeString == HistoryType.SEND
+                    val isText = record.filetypeString == PacketType.TEXT.name
+                    val isCompleted = record.offset >= record.totalLength && record.totalLength > 0
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .combinedClickable(
+                                onClick = {},
+                                onLongClick = {
+                                    selectedRecord = record
+                                    showCopyDialog = true
+                                }
+                            )
+                            .padding(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = HistoryUtils.formatTimestamp(record.timestamp),
+                                fontSize = 12.sp,
+                                color = Color.Gray
+                            )
+                            Text(
+                                text = if (isText) "[文本]" else "[文件]",
+                                fontSize = 12.sp,
+                                color = dark_blue
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = if (isText) record.text else record.name,
+                            fontSize = 14.sp,
+                            color = Color.Black,
+                            maxLines = 2
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = if (isCompleted) "✓ 成功" else "✗ 发送失败",
+                            fontSize = 12.sp,
+                            color = if (isCompleted) Color(0xFF388E3C) else Color(0xFFD32F2F)
+                        )
+                    }
+                }
+            }
+
+            if (showCopyDialog && selectedRecord != null) {
+                AlertDialog(
+                    onDismissRequest = { showCopyDialog = false },
+                    title = { Text("复制") },
+                    text = { Text("是否复制该记录的内容？") },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            val record = selectedRecord
+                            if (record != null) {
+                                val textToCopy = if (record.filetypeString == PacketType.TEXT.name) {
+                                    record.text
+                                } else {
+                                    record.name
+                                }
+                                clipboardManager.setText(AnnotatedString(textToCopy))
+                                Toast.makeText(context, "已复制", Toast.LENGTH_SHORT).apply { setGravity(Gravity.CENTER, 0, 0) }.show()
+                            }
+                            showCopyDialog = false
+                        }) {
+                            Text("复制")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showCopyDialog = false }) {
+                            Text("取消")
+                        }
+                    }
+                )
+            }
+        }
+
+        if (showDialog) {
+            AlertDialog(
+                onDismissRequest = { showDialog = false },
+                title = { Text("提示") },
+                text = { Text(dialogMessage) },
+                confirmButton = {
+                    TextButton(onClick = { showDialog = false }) {
+                        Text("确定")
+                    }
+                }
             )
         }
     }

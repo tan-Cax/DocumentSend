@@ -7,8 +7,12 @@ class HistoryRepository(private val dao: HistoryDao) {
 
     fun getAllHistory() = dao.getAllHistory()
 
-    suspend fun insertHistory(history: History) {
-        dao.insertHistory(history)
+    suspend fun insertHistory(history: History): Long {
+        return dao.insertHistory(history)
+    }
+
+    suspend fun updateUri(historyId: Int, uriString: String) {
+        dao.updateHistoryUri(historyId, uriString)
     }
 
     suspend fun deleteHistory(historyId: Int) {
@@ -30,4 +34,8 @@ class HistoryRepository(private val dao: HistoryDao) {
     suspend fun getHistoryById(id: Int): History? {
         return dao.getHistoryById(id)
     }
+
+    fun getSendHistory() = dao.getSendHistory()
+
+    fun getReceiveHistory() = dao.getReceiveHistory()
 }

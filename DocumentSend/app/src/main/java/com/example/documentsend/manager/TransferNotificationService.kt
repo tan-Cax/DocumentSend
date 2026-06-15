@@ -63,15 +63,24 @@ class TransferNotificationService : Service() {
         createNotificationChannel()
         startForeground(NOTIFICATION_ID, buildNotification("准备传输...", 0f, false).build())
 
+        // 标记是否已经开始了第一次传输
+        var hasStartedTransfer = false
+
         // 收集 TransferManager 的状态变化
         serviceScope.launch {
             TransferManager.getInstance().transferState.collect { progress ->
                 when (progress.direction) {
-                    // 正在传输：更新通知进度
                     TransferDirection.SENDING,
-                    TransferDirection.RECEIVING -> updateNotification(progress)
-                    // 传输空闲：停止服务，移除通知
-                    TransferDirection.IDLE -> stopSelf()
+                    TransferDirection.RECEIVING -> {
+                        hasStartedTransfer = true
+                        updateNotification(progress)
+                    }
+                    TransferDirection.IDLE -> {
+                        // 只有在曾经开始过传输的情况下，才在进入 IDLE 时停止服务
+                        if (hasStartedTransfer) {
+                            stopSelf()
+                        }
+                    }
                 }
             }
         }

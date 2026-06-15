@@ -5,5 +5,5 @@ import com.example.documentsend.network.handlers.INetworkListener
 import java.io.DataInputStream
 
 interface IPacketReceiver {
-    suspend fun receive(header: PacketHeader, dis: DataInputStream, listener: INetworkListener): Result<Unit>
+    suspend fun receive(header: PacketHeader, dis: DataInputStream, listener: INetworkListener, senderIp: String = ""): Result<Unit>
 }

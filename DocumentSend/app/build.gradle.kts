@@ -80,4 +80,6 @@ dependencies {
     // Test - MockK
     testImplementation("io.mockk:mockk:1.14.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
+
+    implementation("androidx.compose.material:material-icons-extended")
 }

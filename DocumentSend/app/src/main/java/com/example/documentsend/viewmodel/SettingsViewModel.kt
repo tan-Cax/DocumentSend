@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.documentsend.data.SettingsState
 import com.example.documentsend.repository.SettingsRepository
 import com.example.documentsend.repository.dataStore
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(application: Application) :
@@ -59,6 +60,37 @@ class SettingsViewModel(application: Application) :
             settingsRepository.savePathFlow.collect { path ->
                 settingsState = settingsState.copy(savePath = path)
             }
+        }
+        viewModelScope.launch {
+            settingsRepository.isFirstLaunchFlow.collect { isFirst ->
+                settingsState = settingsState.copy(isFirstLaunch = isFirst)
+            }
+        }
+        viewModelScope.launch {
+            settingsRepository.targetIpFlow.collect { ip ->
+                settingsState = settingsState.copy(targetIp = ip)
+            }
+        }
+
+        // 所有 Flow 收集完成后，标记 DataStore 已加载
+        viewModelScope.launch {
+            settingsRepository.userNameFlow.first()
+            settingsRepository.themeModeFlow.first()
+            settingsRepository.autoSaveFlow.first()
+            settingsRepository.colorSchemeFlow.first()
+            settingsRepository.saveToHistoryFlow.first()
+            settingsRepository.sendPortFlow.first()
+            settingsRepository.receivePortFlow.first()
+            settingsRepository.savePathFlow.first()
+            settingsRepository.isFirstLaunchFlow.first()
+            settingsRepository.targetIpFlow.first()
+            settingsState = settingsState.copy(isSettingsLoaded = true)
+        }
+    }
+
+    fun updateIsFirstLaunch(isFirst: Int) {
+        viewModelScope.launch {
+            settingsRepository.setIsFirstLaunch(isFirst)
         }
     }
 
@@ -113,6 +145,12 @@ class SettingsViewModel(application: Application) :
     fun resetSavePath() {
         viewModelScope.launch {
             settingsRepository.setSavePath("")
+        }
+    }
+
+    fun updateTargetIp(ip: String) {
+        viewModelScope.launch {
+            settingsRepository.setTargetIp(ip)
         }
     }
 }

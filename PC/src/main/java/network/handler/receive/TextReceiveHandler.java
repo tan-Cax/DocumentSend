@@ -1,5 +1,6 @@
 package network.handler.receive;
 
+import network.NetworkErrorCallback;
 import listener.INetworkListener;
 import protocol.PacketHeader;
 
@@ -20,7 +21,7 @@ public class  TextReceiveHandler implements IReceiveHandler {
         // 2. 读取文本内容
         long bodyLength = header.getBodyLength();
         if (bodyLength > Integer.MAX_VALUE) {
-            System.err.println("文本消息过长，拒绝接收，已跳过数据流");
+            NetworkErrorCallback.getInstance().textError("文本消息过长，拒绝接收，已跳过数据流");
             skipBytesFully(dis, bodyLength);
             return;
         }

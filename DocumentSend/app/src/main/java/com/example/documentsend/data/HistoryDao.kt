@@ -12,7 +12,10 @@ interface HistoryDao {
     fun getAllHistory(): Flow<List<History>>
 
     @Insert
-    suspend fun insertHistory(history: History)
+    suspend fun insertHistory(history: History): Long
+
+    @Query("UPDATE History SET uriString = :uriString WHERE id = :historyId")
+    suspend fun updateHistoryUri(historyId: Int, uriString: String)
 
     @Query("DELETE FROM History WHERE id = :historyId")
     suspend fun deleteHistory(historyId: Int)
@@ -28,4 +31,10 @@ interface HistoryDao {
 
     @Query("UPDATE History SET `offset` = :offset WHERE id = :historyId")
     suspend fun updateHistoryOffset(historyId: Int, offset: Long)
+
+    @Query("SELECT * FROM History WHERE typeString = 'send' ORDER BY timestamp DESC")
+    fun getSendHistory(): Flow<List<History>>
+
+    @Query("SELECT * FROM History WHERE typeString = 'receive' ORDER BY timestamp DESC")
+    fun getReceiveHistory(): Flow<List<History>>
 }

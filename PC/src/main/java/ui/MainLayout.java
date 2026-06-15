@@ -5,8 +5,11 @@ import javafx.geometry.Insets;
 import javafx.scene.Cursor;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
+import utils.AppConfig;
+import utils.NetworkUtils;
 
 public class MainLayout extends BorderPane {
+    private static MainLayout instance;
     private final StackPane contentArea = new StackPane();
     private final MessagePage messagePage = new MessagePage();
     private final FileTransferPage filePage = new FileTransferPage();
@@ -14,6 +17,7 @@ public class MainLayout extends BorderPane {
     private Label activeLabel;
 
     public MainLayout() {
+        instance = this;
         this.setStyle("-fx-background-color: white;");
 
         HBox topNav = new HBox();
@@ -31,7 +35,19 @@ public class MainLayout extends BorderPane {
 
         topNav.getChildren().addAll(txtItem, pipe1, fileItem, pipe2, setItem);
         setTop(topNav);
-        setCenter(contentArea);
+
+        HBox statusBar = new HBox();
+        statusBar.setPadding(new Insets(8, 0, 8, 20));
+        statusBar.setStyle("-fx-background-color: white; -fx-border-color: #ddd; -fx-border-width: 1 0 1 0;");
+        Label usernameLabel = new Label("用户名：" + AppConfig.getUsername());
+        usernameLabel.setStyle("-fx-font-size: 15px; -fx-text-fill: #333; -fx-padding: 0 30 0 0;");
+        Label ipLabel = new Label("我的IP：" + NetworkUtils.getLocalIpv4Address().getHostAddress());
+        ipLabel.setStyle("-fx-font-size: 15px; -fx-text-fill: #333;");
+        statusBar.getChildren().addAll(usernameLabel, ipLabel);
+
+        VBox centerBox = new VBox(statusBar, contentArea);
+        VBox.setVgrow(contentArea, Priority.ALWAYS);
+        setCenter(centerBox);
 
         contentArea.getChildren().addAll(messagePage, filePage, settingsPage);
         selectLabel(txtItem);
@@ -74,5 +90,17 @@ public class MainLayout extends BorderPane {
         page.setVisible(true);
         page.toFront();
         Platform.runLater(() -> page.requestFocus());
+    }
+
+    public static MainLayout getInstance() {
+        return instance;
+    }
+
+    public MessagePage getMessagePage() {
+        return messagePage;
+    }
+
+    public FileTransferPage getFilePage() {
+        return filePage;
     }
 }

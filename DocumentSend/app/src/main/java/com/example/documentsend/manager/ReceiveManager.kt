@@ -5,7 +5,6 @@ import com.example.documentsend.network.SocketServer
 import com.example.documentsend.network.handlers.INetworkListener
 import com.example.documentsend.repository.HistoryRepository
 
-//接收端管理器，负责管理接收端的网络服务和数据存储
 class ReceiveManager private constructor() {
 
     private var socketServer: SocketServer? = null
@@ -23,24 +22,38 @@ class ReceiveManager private constructor() {
         }
     }
 
+    private var lastListener: INetworkListener? = null
+    private var lastPort: Int = 0
+
     fun init(
         context: Context,
         transferManager: TransferManager,
-        historyRepository: HistoryRepository
+        historyRepository: HistoryRepository,
+        autoSave: Boolean = true
     ) {
+        socketServer?.stop()
         socketServer = SocketServer(
             context = context,
             transferManager = transferManager,
-            historyRepository = historyRepository
+            historyRepository = historyRepository,
+            autoSave = autoSave
         )
     }
 
-    //启动接收服务
     fun startServer(port: Int, listener: INetworkListener) {
+        lastPort = port
+        lastListener = listener
         socketServer?.start(port, listener)
     }
 
-    //停止接收服务
+    fun restartServer() {
+        val listener = lastListener
+        val port = lastPort
+        if (listener != null && port > 0) {
+            socketServer?.start(port, listener)
+        }
+    }
+
     fun stopServer() {
         socketServer?.stop()
     }

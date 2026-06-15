@@ -18,18 +18,19 @@ import java.net.Socket
 class SocketServer(
     private val context: Context,
     private val transferManager: TransferManager,
-    private val historyRepository: HistoryRepository
+    private val historyRepository: HistoryRepository,
+    private val autoSave: Boolean = true
 ) {
 
     private var serverSocket: ServerSocket? = null
     private var isRunning = false
 
     private val receivers = mapOf<PacketType, IPacketReceiver>(
-        PacketType.TEXT to TextPacketReceiver(),
-        PacketType.IMAGE to FilePacketReceiver(context, transferManager, historyRepository),
-        PacketType.VIDEO to FilePacketReceiver(context, transferManager, historyRepository),
-        PacketType.FILE to FilePacketReceiver(context, transferManager, historyRepository),
-        PacketType.ARCHIVE to FilePacketReceiver(context, transferManager, historyRepository)
+        PacketType.TEXT to TextPacketReceiver(historyRepository),
+        PacketType.IMAGE to FilePacketReceiver(context, transferManager, historyRepository, autoSave),
+        PacketType.VIDEO to FilePacketReceiver(context, transferManager, historyRepository, autoSave),
+        PacketType.FILE to FilePacketReceiver(context, transferManager, historyRepository, autoSave),
+        PacketType.ARCHIVE to FilePacketReceiver(context, transferManager, historyRepository, autoSave)
     )
 
     fun start(port: Int, listener: INetworkListener) {
@@ -74,7 +75,7 @@ class SocketServer(
 
                 val receiver = receivers[type]
                 if (receiver != null) {
-                    receiver.receive(header, dis, listener)
+                    receiver.receive(header, dis, listener, clientIp)
                 } else {
                     skipBytesFully(dis, header.nameLength.toLong() + header.bodyLength)
                 }

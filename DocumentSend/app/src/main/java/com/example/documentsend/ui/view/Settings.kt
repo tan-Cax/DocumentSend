@@ -1,6 +1,8 @@
 package com.example.documentsend.ui.view
 
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,17 +18,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material3.AlertDialog
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -39,7 +38,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import com.example.documentsend.navigation.Screen
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -47,11 +49,6 @@ import com.example.documentsend.ui.components.MainScaffold
 import com.example.documentsend.ui.theme.white
 import com.example.documentsend.viewmodel.SettingsViewModel
 
-// ==================== 设置条目数据 ====================
-data class SettingItem(
-    val label: String,
-    val key: String
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,15 +59,22 @@ fun Settings(
     val settingsState = viewModel.settingsState
     val context = LocalContext.current
 
-    // 弹窗控制
-    var showUserNameDialog by remember { mutableStateOf(false) }
-    var dialogInput by remember { mutableStateOf(settingsState.userName) }
-    var showSendPortDialog by remember { mutableStateOf(false) }
-    var sendPortInput by remember { mutableStateOf(settingsState.sendPort.toString()) }
-    var showReceivePortDialog by remember { mutableStateOf(false) }
-    var receivePortInput by remember { mutableStateOf(settingsState.receivePort.toString()) }
-    var showSavePathDialog by remember { mutableStateOf(false) }
-    var savePathInput by remember { mutableStateOf(settingsState.savePath) }
+    val directoryPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocumentTree()
+    ) { uri ->
+        uri?.let {
+            // 获取并清理路径
+            val documentId = android.provider.DocumentsContract.getTreeDocumentId(it)
+            val path = if (documentId.startsWith("primary:")) {
+                "${android.os.Environment.getExternalStorageDirectory()}/${documentId.removePrefix("primary:")}"
+            } else {
+                // 如果是其他存储卷，暂时只显示 documentId 的部分，或者直接存 URI (取决于应用后续如何使用)
+                // 这里为了保持 java.io.File 兼容性，尝试拼接
+                "/storage/${documentId.replace(":", "/")}"
+            }
+            viewModel.updateSavePath(path)
+        }
+    }
 
     // 主题模式映射
     val themeModeOptions = listOf("白天", "黑夜", "跟随系统")
@@ -85,15 +89,13 @@ fun Settings(
         Column(
             modifier = Modifier
                 .background(white)
-                .fillMaxSize()
-                .padding(paddingValues),
+                .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
-                    .padding(horizontal = 16.dp),
+                    .weight(1f),
                 verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
                 item { Spacer(modifier = Modifier.height(8.dp)) }
@@ -101,21 +103,11 @@ fun Settings(
                 // 用户名修改
                 item {
                     SettingRow(label = "用户名称") {
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .clickable {
-                                    dialogInput = settingsState.userName
-                                    showUserNameDialog = true
-                                }
-                                .padding(horizontal = 12.dp, vertical = 8.dp)
-                        ) {
-                            Text(
-                                text = settingsState.userName,
-                                fontSize = 14.sp,
-                                color = Color.Gray
-                            )
-                        }
+                        SettingInput(
+                            value = settingsState.userName,
+                            onValueChange = { viewModel.updateUserName(it) },
+                            placeholder = "请输入用户名"
+                        )
                     }
                 }
 
@@ -167,75 +159,67 @@ fun Settings(
                 // 发送端口
                 item {
                     SettingRow(label = "发送端口") {
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .clickable {
-                                    sendPortInput = settingsState.sendPort.toString()
-                                    showSendPortDialog = true
+                        SettingInput(
+                            value = settingsState.sendPort.toString(),
+                            onValueChange = {
+                                val port = it.toIntOrNull()
+                                if (port != null && port in 1..65535) {
+                                    viewModel.updateSendPort(port)
+                                } else if (it.isEmpty()) {
+                                    viewModel.updateSendPort(0)
                                 }
-                                .padding(horizontal = 12.dp, vertical = 8.dp)
-                        ) {
-                            Text(
-                                text = settingsState.sendPort.toString(),
-                                fontSize = 14.sp,
-                                color = Color.Gray
-                            )
-                        }
+                            },
+                            placeholder = "端口号",
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
                     }
                 }
 
                 // 接收端口
                 item {
                     SettingRow(label = "接收端口") {
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .clickable {
-                                    receivePortInput = settingsState.receivePort.toString()
-                                    showReceivePortDialog = true
+                        SettingInput(
+                            value = settingsState.receivePort.toString(),
+                            onValueChange = {
+                                val port = it.toIntOrNull()
+                                if (port != null && port in 1..65535) {
+                                    viewModel.updateReceivePort(port)
+                                } else if (it.isEmpty()) {
+                                    viewModel.updateReceivePort(0)
                                 }
-                                .padding(horizontal = 12.dp, vertical = 8.dp)
-                        ) {
-                            Text(
-                                text = settingsState.receivePort.toString(),
-                                fontSize = 14.sp,
-                                color = Color.Gray
-                            )
-                        }
+                            },
+                            placeholder = "端口号",
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
                     }
                 }
 
                 // 存储路径
                 item {
                     SettingRow(label = "存储路径") {
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .clickable {
-                                    savePathInput = settingsState.savePath
-                                    showSavePathDialog = true
-                                }
-                                .padding(horizontal = 12.dp, vertical = 8.dp)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.End,
+                            modifier = Modifier.weight(1f)
                         ) {
                             Text(
                                 text = if (settingsState.savePath.isEmpty()) "默认" else settingsState.savePath,
-                                fontSize = 14.sp,
-                                color = Color.Gray
+                                fontSize = 13.sp,
+                                color = Color.Gray,
+                                modifier = Modifier
+                                    .weight(1f, fill = false)
+                                    .padding(end = 8.dp),
+                                textAlign = TextAlign.End,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                            )
+                            SimpleButton(
+                                text = "选择",
+                                onClick = {
+                                    directoryPickerLauncher.launch(null)
+                                }
                             )
                         }
-                    }
-                }
-
-                // 关于我们
-                item {
-                    SettingRow(label = "关于我们") {
-                        SimpleButton(
-                            text = "查看",
-                            onClick = {
-                                Toast.makeText(context, "关于我们", Toast.LENGTH_SHORT).show()
-                            }
-                        )
                     }
                 }
 
@@ -278,161 +262,6 @@ fun Settings(
                 }
             }
         }
-    }
-
-    // 修改用户名弹窗
-    if (showUserNameDialog) {
-        AlertDialog(
-            onDismissRequest = { showUserNameDialog = false },
-            title = { Text(text = "设置用户名", fontWeight = FontWeight.Bold) },
-            text = {
-                OutlinedTextField(
-                    value = dialogInput,
-                    onValueChange = { dialogInput = it },
-                    placeholder = { Text("请输入用户名") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        val name = dialogInput.ifBlank { "未设置用户名" }
-                        viewModel.updateUserName(name)
-                        showUserNameDialog = false
-                    }
-                ) {
-                    Text("确认")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showUserNameDialog = false }
-                ) {
-                    Text("取消")
-                }
-            }
-        )
-    }
-
-    // 修改发送端口弹窗
-    if (showSendPortDialog) {
-        AlertDialog(
-            onDismissRequest = { showSendPortDialog = false },
-            title = { Text(text = "设置发送端口", fontWeight = FontWeight.Bold) },
-            text = {
-                OutlinedTextField(
-                    value = sendPortInput,
-                    onValueChange = { sendPortInput = it },
-                    placeholder = { Text("请输入端口号") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        val port = sendPortInput.toIntOrNull()
-                        if (port != null && port in 1..65535) {
-                            viewModel.updateSendPort(port)
-                            showSendPortDialog = false
-                        } else {
-                            Toast.makeText(context, "端口号无效", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                ) {
-                    Text("确认")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showSendPortDialog = false }
-                ) {
-                    Text("取消")
-                }
-            }
-        )
-    }
-
-    // 修改接收端口弹窗
-    if (showReceivePortDialog) {
-        AlertDialog(
-            onDismissRequest = { showReceivePortDialog = false },
-            title = { Text(text = "设置接收端口", fontWeight = FontWeight.Bold) },
-            text = {
-                OutlinedTextField(
-                    value = receivePortInput,
-                    onValueChange = { receivePortInput = it },
-                    placeholder = { Text("请输入端口号") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        val port = receivePortInput.toIntOrNull()
-                        if (port != null && port in 1..65535) {
-                            viewModel.updateReceivePort(port)
-                            showReceivePortDialog = false
-                        } else {
-                            Toast.makeText(context, "端口号无效", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                ) {
-                    Text("确认")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showReceivePortDialog = false }
-                ) {
-                    Text("取消")
-                }
-            }
-        )
-    }
-
-    // 修改存储路径弹窗
-    if (showSavePathDialog) {
-        AlertDialog(
-            onDismissRequest = { showSavePathDialog = false },
-            title = { Text(text = "设置存储路径", fontWeight = FontWeight.Bold) },
-            text = {
-                Column {
-                    OutlinedTextField(
-                        value = savePathInput,
-                        onValueChange = { savePathInput = it },
-                        placeholder = { Text("留空使用默认路径") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "默认路径: /storage/emulated/0/Download/DocumentSend",
-                        fontSize = 12.sp,
-                        color = Color.Gray
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.updateSavePath(savePathInput.trim())
-                        showSavePathDialog = false
-                    }
-                ) {
-                    Text("确认")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showSavePathDialog = false }
-                ) {
-                    Text("取消")
-                }
-            }
-        )
     }
 }
 
@@ -548,4 +377,64 @@ fun SimpleButton(
             color = Color.Black
         )
     }
+}
+
+// 设置输入框
+@Composable
+fun SettingInput(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String = "",
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default
+) {
+    // 过滤掉为 "0" 的端口显示内容，让输入框可以清空重新输入
+    val displayValue = if (value == "0") "" else value
+
+    // 使用 TextFieldValue 来手动管理光标位置
+    var textFieldValue by remember {
+        mutableStateOf(TextFieldValue(displayValue, androidx.compose.ui.text.TextRange(displayValue.length)))
+    }
+
+    // 当外部值变化且与本地不一致时，同步值并保持光标在末尾
+    if (textFieldValue.text != displayValue) {
+        textFieldValue = textFieldValue.copy(
+            text = displayValue,
+            selection = androidx.compose.ui.text.TextRange(displayValue.length)
+        )
+    }
+
+    BasicTextField(
+        value = textFieldValue,
+        onValueChange = {
+            textFieldValue = it
+            if (it.text != displayValue) {
+                onValueChange(it.text)
+            }
+        },
+        modifier = Modifier
+            .width(180.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xFFF5F5F5))
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        singleLine = true,
+        textStyle = TextStyle(
+            fontSize = 14.sp,
+            color = Color.Black,
+            textAlign = TextAlign.End
+        ),
+        keyboardOptions = keyboardOptions,
+        decorationBox = { innerTextField ->
+            Box(contentAlignment = Alignment.CenterEnd) {
+                if (displayValue.isEmpty()) {
+                    Text(
+                        text = placeholder,
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        textAlign = TextAlign.End
+                    )
+                }
+                innerTextField()
+            }
+        }
+    )
 }

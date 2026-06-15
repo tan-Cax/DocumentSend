@@ -1,6 +1,5 @@
 package com.example.documentsend.ui.view
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,6 +18,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,8 +31,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -45,8 +45,13 @@ import java.util.Locale
 import com.example.documentsend.data.HistoryType
 import com.example.documentsend.viewmodel.DocViewModel
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 
 // 历史记录页面主函数
 @Composable
@@ -57,18 +62,33 @@ fun History(
 ) {
     val historyList = viewModel.historyList
     val clipboardManager = LocalClipboardManager.current
-    val context = LocalContext.current
 
-    // 监听 UI 事件（如续传成功/失败提示）
+    var showDialog by remember { mutableStateOf(false) }
+    var dialogMessage by remember { mutableStateOf("") }
+
     LaunchedEffect(Unit) {
         DocViewModel.uiEvent.collect { message ->
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            dialogMessage = message
+            showDialog = true
         }
     }
 
     // 页面加载时从数据库读取历史记录
     LaunchedEffect(Unit) {
         viewModel.loadHistory()
+    }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("提示") },
+            text = { Text(dialogMessage) },
+            confirmButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text("确定")
+                }
+            }
+        )
     }
 
     // 页面主体布局
@@ -79,9 +99,7 @@ fun History(
     ) { paddingValues ->
         Column(
             modifier = Modifier
-                .background(white)
-                .fillMaxSize()
-                .padding(paddingValues),
+                .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             // 历史记录列表，可滚动
@@ -98,6 +116,19 @@ fun History(
                 }
             }
         }
+    }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("提示") },
+            text = { Text(dialogMessage) },
+            confirmButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text("确定")
+                }
+            }
+        )
     }
 }
 
@@ -133,12 +164,7 @@ fun HistoryCard(history: com.example.documentsend.data.History, docViewModel: Do
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        painter = painterResource(
-                            id = if (isSend)
-                                android.R.drawable.stat_sys_upload
-                            else
-                                android.R.drawable.stat_sys_download
-                        ),
+                        imageVector = if (isSend) Icons.Default.ArrowUpward else Icons.Default.ArrowDownward,
                         contentDescription = null,
                         tint = if (isSend) Color(0xFF1976D2) else Color(0xFF388E3C),
                         modifier = Modifier.size(24.dp)
@@ -183,31 +209,31 @@ fun HistoryCard(history: com.example.documentsend.data.History, docViewModel: Do
                     )
                 }
 
-                // 发送类添加按键
-                if (isSend) {
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(
-                        onClick = {
-                            if (isCompleted) {
-                                docViewModel.sendFromBreakpoint(history.copy(offset = 0))
-                            } else {
-                                docViewModel.sendFromBreakpoint(history)
-                            }
-                        },
-                        shape = RoundedCornerShape(8.dp),
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                        modifier = Modifier.height(32.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isCompleted) Color(0xFF1976D2) else Color(0xFFFFA000)
-                        )
-                    ) {
-                        Text(
-                            text = if (isCompleted) "重新发送" else "继续发送",
-                            fontSize = 12.sp,
-                            color = Color.White
-                        )
-                    }
-                }
+                // 发送类添加按键（注释：URI权限问题，待内部存储方案实现后启用）
+                // if (isSend) {
+                //     Spacer(modifier = Modifier.width(8.dp))
+                //     Button(
+                //         onClick = {
+                //             if (isCompleted) {
+                //                 docViewModel.sendFromBreakpoint(history.copy(offset = 0))
+                //             } else {
+                //                 docViewModel.sendFromBreakpoint(history)
+                //             }
+                //         },
+                //         shape = RoundedCornerShape(8.dp),
+                //         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                //         modifier = Modifier.height(32.dp),
+                //         colors = ButtonDefaults.buttonColors(
+                //             containerColor = if (isCompleted) Color(0xFF1976D2) else Color(0xFFFFA000)
+                //         )
+                //     ) {
+                //         Text(
+                //             text = if (isCompleted) "重新发送" else "继续发送",
+                //             fontSize = 12.sp,
+                //             color = Color.White
+                //         )
+                //     }
+                // }
             }
 
             // 下方状态小字
@@ -227,5 +253,6 @@ fun formatFileSize(size: Long): String {
     if (size <= 0) return "0 B"
     val units = arrayOf("B", "KB", "MB", "GB", "TB")
     val digitGroups = (Math.log10(size.toDouble()) / Math.log10(1024.0)).toInt()
-    return String.format("%.2f %s", size / Math.pow(1024.0, digitGroups.toDouble()), units[digitGroups])
+    val safeIndex = digitGroups.coerceIn(0, units.size - 1)
+    return String.format("%.2f %s", size / Math.pow(1024.0, digitGroups.toDouble()), units[safeIndex])
 }

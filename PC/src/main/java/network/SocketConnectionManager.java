@@ -55,13 +55,13 @@ public class SocketConnectionManager {
                             listener.onConnected(activeSocket.getInetAddress().getHostAddress());
                         }
                     } catch (IOException e) {
-                        System.err.println("绑定读写模块失败: " + e.getMessage());
+                        NetworkErrorCallback.getInstance().receiveError("绑定读写模块失败: " + e.getMessage());
                         closeActiveSocket();
                     }
                 }
             } catch (IOException e) {
                 if (isRunning) {
-                    System.err.println("监听端口异常: " + e.getMessage());
+                    NetworkErrorCallback.getInstance().receiveError("监听端口异常: " + e.getMessage());
                 } else {
                     System.out.println("网络引擎已关闭。");
                 }

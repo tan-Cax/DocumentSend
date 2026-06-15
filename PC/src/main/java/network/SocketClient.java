@@ -43,7 +43,7 @@ public class SocketClient {
     @SuppressWarnings("unchecked")
     public void sendText(String text) {
         if (dos == null) {
-            System.err.println("发送端未绑定到有效的连接");
+            NetworkErrorCallback.getInstance().sendError("发送端未绑定到有效的连接");
             return;
         }
         new Thread(() -> {
@@ -53,7 +53,7 @@ public class SocketClient {
                     handler.handleSend(text, dos);
                 }
             } catch (IOException e) {
-                System.err.println("发送文本消息失败: " + e.getMessage());
+                NetworkErrorCallback.getInstance().sendError("发送文本消息失败: " + e.getMessage());
             }
         }).start();
     }
@@ -64,7 +64,7 @@ public class SocketClient {
     @SuppressWarnings("unchecked")
     public void sendFile(File file) {
         if (dos == null) {
-            System.err.println("发送端未绑定到有效的连接");
+            NetworkErrorCallback.getInstance().sendError("发送端未绑定到有效的连接");
             return;
         }
         new Thread(() -> {
@@ -74,7 +74,7 @@ public class SocketClient {
                     handler.handleSend(file, dos);
                 }
             } catch (IOException e) {
-                System.err.println("发送文件失败: " + e.getMessage());
+                NetworkErrorCallback.getInstance().sendError("发送文件失败: " + e.getMessage());
             }
         }).start();
     }
@@ -95,7 +95,7 @@ public class SocketClient {
                 }
                 System.out.println("文本发送成功: " + targetIp + ":" + targetPort);
             } catch (IOException e) {
-                System.err.println("发送文本失败: " + e.getMessage());
+                NetworkErrorCallback.getInstance().sendError("发送文本失败: " + e.getMessage());
             } finally {
                 if (socket != null && !socket.isClosed()) {
                     try { socket.close(); } catch (IOException e) { /* ignore */ }
@@ -120,7 +120,7 @@ public class SocketClient {
                 }
                 System.out.println("文件发送成功: " + file.getName() + " → " + targetIp + ":" + targetPort);
             } catch (IOException e) {
-                System.err.println("发送文件失败: " + e.getMessage());
+                NetworkErrorCallback.getInstance().sendError("发送文件失败: " + e.getMessage());
             } finally {
                 if (socket != null && !socket.isClosed()) {
                     try { socket.close(); } catch (IOException e) { /* ignore */ }

@@ -1,9 +1,9 @@
 package com.example.documentsend.viewmodel
 
 import android.app.Application
-import android.content.Context
 import android.net.Uri
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
@@ -11,14 +11,15 @@ import androidx.lifecycle.viewModelScope
 import com.example.documentsend.data.AppDatabase
 import com.example.documentsend.data.FileState
 import com.example.documentsend.data.History
-import com.example.documentsend.data.HistoryType
 import com.example.documentsend.manager.ReceiveManager
 import com.example.documentsend.manager.TransferManager
 import com.example.documentsend.network.SocketClient
 import com.example.documentsend.repository.HistoryRepository
 import com.example.documentsend.repository.Repository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import com.example.documentsend.network.PacketType
 import com.example.documentsend.network.handlers.INetworkListener
 import com.example.documentsend.network.handlers.send.SendContent
@@ -27,8 +28,10 @@ import com.example.documentsend.repository.dataStore
 import com.example.documentsend.utils.FileUtils
 import com.example.documentsend.utils.GetLocalIP
 import com.example.documentsend.utils.HistoryUtils
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.channels.BufferOverflow
+import java.io.File
 
 class DocViewModel(application: Application) :
     AndroidViewModel(application) {
@@ -39,7 +42,10 @@ class DocViewModel(application: Application) :
     private val historyRepository = HistoryRepository(historyDao)
     private val ipDao = AppDatabase.getDatabase(application).ipAddressDao()
     private val repository = Repository(ipDao)
-    private val _uiEvent = Channel<String>()
+    private val _uiEvent = MutableSharedFlow<String>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
 
     private var saveToHistory = true
 
@@ -51,7 +57,9 @@ class DocViewModel(application: Application) :
 
     private val receiveManager = ReceiveManager.getInstance()
 
-    val uiEvent = _uiEvent.receiveAsFlow()
+    val uiEvent = _uiEvent.asSharedFlow()
+    val sendSessionRecords = mutableStateListOf<History>()
+    val receiveSessionRecords = mutableStateListOf<History>()
     var fileState by mutableStateOf(FileState())
         private set
 
@@ -85,33 +93,65 @@ class DocViewModel(application: Application) :
             settingsRepository.saveToHistoryFlow.collect { saveToHistory = it }
         }
         viewModelScope.launch {
+            settingsRepository.autoSaveFlow.collect { autoSave ->
+                fileState = fileState.copy(autoSave = autoSave)
+                // 关键修正：设置改变时动态重新初始化接收端并重启
+                receiveManager.init(
+                    context = application,
+                    transferManager = transferManager,
+                    historyRepository = historyRepository,
+                    autoSave = autoSave
+                )
+                receiveManager.restartServer()
+            }
+        }
+        viewModelScope.launch {
             settingsRepository.sendPortFlow.collect { port ->
                 fileState = fileState.copy(port = port)
             }
+        }
+        viewModelScope.launch {
+            settingsRepository.targetIpFlow.collect { ip ->
+                fileState = fileState.copy(inputIp = ip)
+            }
+        }
+
+        // 启动接收服务器
+        viewModelScope.launch {
+            val receivePort = settingsRepository.receivePortFlow.first()
+            startServer(receivePort)
         }
     }
 
     fun startServer(port: Int) {
         receiveManager.startServer(port, object : INetworkListener {
             override fun onConnected(clientIp: String) {
-                viewModelScope.launch { _uiEvent.send("客户端已连接: $clientIp") }
             }
             override fun onDisconnected() {
-                viewModelScope.launch { _uiEvent.send("客户端已断开") }
             }
             override fun onTextMessage(text: String) {
-                viewModelScope.launch { _uiEvent.send("收到文本: $text") }
+                viewModelScope.launch { _uiEvent.emit("收到文本: $text") }
             }
             override fun onFileStarted(fileName: String, totalLength: Long) {
-                viewModelScope.launch { _uiEvent.send("开始接收文件: $fileName") }
             }
             override fun onFileProgress(fileName: String, currentLength: Long, totalLength: Long) {
             }
             override fun onFileFinished(fileName: String) {
-                viewModelScope.launch { _uiEvent.send("文件接收完成: $fileName") }
+            }
+            override fun onFileReadyToSave(historyId: Int, fileName: String, fileSize: Long, tempPath: String) {
+                fileState = fileState.copy(
+                    pendingSaveHistoryId = historyId,
+                    pendingSaveFileName = fileName,
+                    pendingSaveFileSize = fileSize,
+                    pendingSaveTempPath = tempPath
+                )
+                viewModelScope.launch { _uiEvent.emit("收到文件: $fileName") }
             }
             override fun onError(message: String) {
-                viewModelScope.launch { _uiEvent.send("错误: $message") }
+                viewModelScope.launch { _uiEvent.emit("错误: $message") }
+            }
+            override fun onReceiveRecord(record: History) {
+                receiveSessionRecords.add(0, record)
             }
         })
     }
@@ -124,17 +164,20 @@ class DocViewModel(application: Application) :
         val type = fileState.packetType ?: return
         viewModelScope.launch {
             val history = HistoryUtils.createTextSendRecoder(
-                content = fileState.inputMessage ?: "",
-                targetIp = fileState.inputIp ?: "",
+                content = fileState.inputMessage,
+                targetIp = fileState.inputIp,
             )
-            historyRepository.insertHistory(history)
+            val historyId = historyRepository.insertHistory(history)
 
             val content = SendContent.fromText(fileState.inputMessage)
             val result = socketSendClient.send(fileState.inputIp, fileState.port, type, content)
             result.onSuccess {
-                _uiEvent.send("发送成功")
+                historyRepository.updateOffset(historyId.toInt(), history.totalLength)
+                sendSessionRecords.add(0, history.copy(id = historyId.toInt(), offset = history.totalLength))
+                _uiEvent.emit("发送成功")
             }.onFailure { e ->
-                _uiEvent.send("发送失败: ${e.message}")
+                sendSessionRecords.add(0, history.copy(id = historyId.toInt()))
+                _uiEvent.emit("发送失败: ${e.message}")
             }
         }
     }
@@ -151,24 +194,26 @@ class DocViewModel(application: Application) :
                 targetIp = fileState.inputIp,
                 totalLength = fileState.fileSize
             )
-            historyRepository.insertHistory(history)
+            val historyId = historyRepository.insertHistory(history)
 
             val content = SendContent.fromUri(
                 getApplication<Application>(),
                 uri,
                 offset = 0,
-                historyId = history.id
+                historyId = historyId.toInt()
             )
             if (content == null) {
-                _uiEvent.send("无法获取文件内容")
+                sendSessionRecords.add(0, history.copy(id = historyId.toInt()))
+                _uiEvent.emit("无法获取文件内容")
                 return@launch
             }
 
             val result = socketSendClient.send(fileState.inputIp, fileState.port, type, content)
             result.onSuccess {
-                _uiEvent.send("发送成功")
+                sendSessionRecords.add(0, history.copy(id = historyId.toInt(), offset = history.totalLength))
             }.onFailure { e ->
-                _uiEvent.send("发送失败: ${e.message}")
+                sendSessionRecords.add(0, history.copy(id = historyId.toInt()))
+                _uiEvent.emit("发送失败: ${e.message}")
             }
         }
     }
@@ -178,28 +223,37 @@ class DocViewModel(application: Application) :
         val type = HistoryUtils.getPacketType(history) ?: return
 
         viewModelScope.launch {
-            val content = SendContent.fromUri(
-                getApplication<Application>(),
-                uri,
-                offset = history.offset,
-                historyId = history.id
-            )
-            if (content == null) {
-                _uiEvent.send("无法获取文件内容")
-                return@launch
-            }
+            try {
+                val content = SendContent.fromUri(
+                    getApplication<Application>(),
+                    uri,
+                    offset = history.offset,
+                    historyId = history.id
+                )
+                if (content == null) {
+                    _uiEvent.emit("无法获取文件内容")
+                    return@launch
+                }
 
-            val result = socketSendClient.send(history.targetIp, fileState.port, type, content)
-            result.onSuccess {
-                _uiEvent.send("续传成功")
-            }.onFailure { e ->
-                _uiEvent.send("续传失败: ${e.message}")
+                val result = socketSendClient.send(history.targetIp, fileState.port, type, content)
+                result.onSuccess {
+                    sendSessionRecords.add(0, history.copy(offset = history.totalLength))
+                    _uiEvent.emit("续传成功")
+                }.onFailure { e ->
+                    sendSessionRecords.add(0, history)
+                    _uiEvent.emit("续传失败: ${e.message}")
+                }
+            } catch (e: Exception) {
+                _uiEvent.emit("发送失败: ${e.message}")
             }
         }
     }
 
     fun updateInputIp(ip: String) {
         fileState = fileState.copy(inputIp = ip)
+        viewModelScope.launch {
+            settingsRepository.setTargetIp(ip)
+        }
     }
 
     fun updateInputMessage(message: String) {
@@ -210,7 +264,7 @@ class DocViewModel(application: Application) :
         fileState = fileState.copy(packetType = packetType)
     }
 
-    fun updateSelectedUri(uri: android.net.Uri?) {
+    fun updateSelectedUri(uri: Uri?) {
         if (uri != null) {
             val context = getApplication<Application>()
             val fileName = FileUtils.getFileName(context, uri)
@@ -245,8 +299,86 @@ class DocViewModel(application: Application) :
             if (localIp != null) {
                 fileState = fileState.copy(localIpAddress = localIp)
             } else {
-                _uiEvent.send("未获取到IP地址")
+                _uiEvent.emit("未获取到IP地址")
             }
         }
+    }
+
+    fun savePendingFile(targetPath: String) {
+        val tempPath = fileState.pendingSaveTempPath
+        val fileName = fileState.pendingSaveFileName
+        if (tempPath.isEmpty() || fileName.isEmpty()) return
+
+        viewModelScope.launch {
+            try {
+                val tempFile = File(tempPath)
+                if (!tempFile.exists()) {
+                    _uiEvent.emit("临时文件不存在")
+                    return@launch
+                }
+
+                val targetDir = File(targetPath)
+                if (!targetDir.exists()) targetDir.mkdirs()
+
+                //重名文件检测
+                var targetFile = File(targetDir, fileName)
+                var suffix = 1
+                while (targetFile.exists()) {
+                    val nameWithoutExt = fileName.substringBeforeLast(".")
+                    val ext = fileName.substringAfterLast(".", "")
+                    val newName = if (ext.isNotEmpty()) "${nameWithoutExt}($suffix).$ext" else "${fileName}($suffix)"
+                    targetFile = File(targetDir, newName)
+                    suffix++
+                }
+
+                // 使用流拷贝替代 renameTo，确保跨分区保存成功
+                val success = withContext(Dispatchers.IO) {
+                    try {
+                        tempFile.inputStream().use { input ->
+                            targetFile.outputStream().use { output ->
+                                input.copyTo(output)
+                            }
+                        }
+                        tempFile.delete()
+                        true
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        false
+                    }
+                }
+
+                if (success) {
+                    val historyId = fileState.pendingSaveHistoryId
+                    if (historyId > 0) {
+                        historyRepository.updateUri(historyId, Uri.fromFile(targetFile).toString())
+                    }
+                    _uiEvent.emit("文件已保存: ${targetFile.absolutePath}")
+                } else {
+                    _uiEvent.emit("文件保存失败")
+                }
+
+                fileState = fileState.copy(
+                    pendingSaveHistoryId = -1,
+                    pendingSaveFileName = "",
+                    pendingSaveFileSize = 0,
+                    pendingSaveTempPath = ""
+                )
+            } catch (e: Exception) {
+                _uiEvent.emit("保存失败: ${e.message}")
+            }
+        }
+    }
+
+    fun cancelPendingSave() {
+        val tempPath = fileState.pendingSaveTempPath
+        if (tempPath.isNotEmpty()) {
+            File(tempPath).delete()
+        }
+        fileState = fileState.copy(
+            pendingSaveHistoryId = -1,
+            pendingSaveFileName = "",
+            pendingSaveFileSize = 0,
+            pendingSaveTempPath = ""
+        )
     }
 }

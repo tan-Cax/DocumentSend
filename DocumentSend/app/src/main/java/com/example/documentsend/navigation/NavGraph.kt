@@ -16,13 +16,25 @@ import com.example.documentsend.ui.view.Text
 import com.example.documentsend.viewmodel.DocViewModel
 import com.example.documentsend.viewmodel.HistoryViewModel
 import com.example.documentsend.viewmodel.SettingsViewModel
+import com.example.documentsend.ui.components.FirstLaunchDialog
 
 @Composable
 fun AppNavigation() {
 
     val navController = rememberNavController()
 
-    var viewmodel : DocViewModel = viewModel()
+    val settingsViewModel: SettingsViewModel = viewModel()
+    val settingsState = settingsViewModel.settingsState
+
+    if (settingsState.isSettingsLoaded && settingsState.isFirstLaunch == 1) {
+        FirstLaunchDialog(
+            onDismiss = {
+                settingsViewModel.updateIsFirstLaunch(0)
+            }
+        )
+    }
+
+    val viewmodel : DocViewModel = viewModel()
 
     NavHost(
         navController = navController,
@@ -63,7 +75,6 @@ fun AppNavigation() {
         composable(
             route = Screen.Settings.route
         ){
-            val settingsViewModel: SettingsViewModel = viewModel()
             Settings(
                 navController = navController,
                 viewModel = settingsViewModel

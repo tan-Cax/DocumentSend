@@ -39,10 +39,16 @@ object StorageUtils {
 
         val nameWithoutExt = fileName.substringBeforeLast(".")
         val ext = fileName.substringAfterLast(".", "")
-        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
 
-        val newName = if (ext.isNotEmpty()) "${nameWithoutExt}_${timestamp}.${ext}" else "${nameWithoutExt}_${timestamp}"
-        return File(dir, newName)
+        var counter = 1
+        var newFile: File
+        do {
+            val newName = if (ext.isNotEmpty()) "${nameWithoutExt}(${counter}).${ext}" else "${nameWithoutExt}(${counter})"
+            newFile = File(dir, newName)
+            counter++
+        } while (newFile.exists())
+
+        return newFile
     }
 
     fun formatFileSize(bytes: Long): String {
@@ -62,10 +68,11 @@ object StorageUtils {
         getPartialFile(dir, fileName).delete()
     }
 
-    fun renameToFinal(dir: File, fileName: String): Boolean {
+    fun renameToFinal(dir: File, fileName: String): File {
         val partial = getPartialFile(dir, fileName)
-        val finalFile = File(dir, fileName)
-        return partial.renameTo(finalFile)
+        val finalFile = getUniqueFile(dir, fileName)
+        partial.renameTo(finalFile)
+        return finalFile
     }
 
     fun hasPartialFile(dir: File, fileName: String): Boolean {
