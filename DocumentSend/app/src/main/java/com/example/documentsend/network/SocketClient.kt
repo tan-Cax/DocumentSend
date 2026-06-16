@@ -7,6 +7,7 @@ import com.example.documentsend.network.handlers.send.SendContent
 import com.example.documentsend.network.handlers.send.TextPacketSender
 import com.example.documentsend.network.handlers.send.FilePacketSender
 import com.example.documentsend.repository.HistoryRepository
+import com.example.documentsend.log.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.DataOutputStream
@@ -35,6 +36,7 @@ class SocketClient(
     ): Result<String> = withContext(Dispatchers.IO) {
         val socket = Socket()
         try {
+            Logger.logInfo("Network", "Connect", "连接目标: $ip:$port")
             socket.connect(InetSocketAddress(ip, port), 5000)
             val dos = DataOutputStream(socket.getOutputStream())
 
@@ -42,8 +44,10 @@ class SocketClient(
                 ?: return@withContext Result.failure(IllegalArgumentException("No sender for type: $packetType"))
 
             sender.send(dos, content, packetType)
+            Logger.logInfo("Network", "SendSuccess", "发送成功: $ip:$port")
             Result.success("发送成功")
         } catch (e: Exception) {
+            Logger.logError("Network", "SendFailed", e)
             Result.failure(e)
         } finally {
             try {

@@ -3,6 +3,7 @@ package com.example.documentsend.network.handlers.receive
 import android.content.Context
 import com.example.documentsend.data.History
 import com.example.documentsend.data.HistoryType
+import com.example.documentsend.log.Logger
 import com.example.documentsend.manager.TransferManager
 import com.example.documentsend.network.PacketHeader
 import com.example.documentsend.network.handlers.INetworkListener
@@ -62,6 +63,7 @@ class FilePacketReceiver(
             var lastOffsetSave = header.offset
 
             // 通知开始接收
+            Logger.logInfo("Network", "FileReceiveStart", "开始接收文件: $fileName, 大小: ${header.totalLength}, offset: ${header.offset}")
             listener.onFileStarted(fileName, header.totalLength)
 
             // 循环接收
@@ -103,6 +105,7 @@ class FilePacketReceiver(
             listener.onReceiveRecord(record)
 
             // 通知完成 - 统一走 onFileReadyToSave，让 ViewModel 处理
+            Logger.logInfo("Network", "FileReceiveComplete", "文件接收完成: $fileName, 已接收: $totalRead")
             listener.onFileReadyToSave(historyId.toInt(), finalFile.name, header.totalLength, finalFile.absolutePath)
 
             // 稍微延迟重置状态，让用户看到进度条到 100%
@@ -111,6 +114,7 @@ class FilePacketReceiver(
 
             Result.success(Unit)
         } catch (e: Exception) {
+            Logger.logError("Network", "FileReceiveFailed", e)
             listener.onError("接收文件失败: ${e.message}")
             transferManager.setIdle()
             Result.failure(e)

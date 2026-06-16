@@ -11,8 +11,10 @@ import androidx.lifecycle.viewModelScope
 import com.example.documentsend.data.AppDatabase
 import com.example.documentsend.data.FileState
 import com.example.documentsend.data.History
+import com.example.documentsend.log.Logger
 import com.example.documentsend.manager.ReceiveManager
 import com.example.documentsend.manager.TransferManager
+import com.example.documentsend.manager.UdpManager
 import com.example.documentsend.network.SocketClient
 import com.example.documentsend.repository.HistoryRepository
 import com.example.documentsend.repository.Repository
@@ -23,6 +25,7 @@ import kotlinx.coroutines.withContext
 import com.example.documentsend.network.PacketType
 import com.example.documentsend.network.handlers.INetworkListener
 import com.example.documentsend.network.handlers.send.SendContent
+import com.example.documentsend.utils.DeviceUuidUtils
 import com.example.documentsend.repository.SettingsRepository
 import com.example.documentsend.repository.dataStore
 import com.example.documentsend.utils.FileUtils
@@ -37,6 +40,7 @@ class DocViewModel(application: Application) :
     AndroidViewModel(application) {
 
     private val transferManager = TransferManager.getInstance()
+    private val udpManager = UdpManager.getInstance()
     private val settingsRepository = SettingsRepository(application.dataStore)
     private val historyDao = AppDatabase.getDatabase(application).historyDao()
     private val historyRepository = HistoryRepository(historyDao)
@@ -74,6 +78,23 @@ class DocViewModel(application: Application) :
             val localIp = GetLocalIP.getLocalIpAddress()
             fileState = fileState.copy(localIpAddress = localIp ?: "未获取到IP地址")
         }
+
+        // 创建uuid并启动UDP广播
+        viewModelScope.launch {
+            val uuid = DeviceUuidUtils.getOrCreate(application)
+            val receivePort = settingsRepository.receivePortFlow.first()
+            val userName = settingsRepository.userNameFlow.first()
+            fileState = fileState.copy(deviceUuid = uuid)
+            udpManager.start(uuid, receivePort, userName)
+        }
+
+        // 收集局域网发现的设备
+        viewModelScope.launch {
+            udpManager.discoveredDevices.collect { devices ->
+                fileState = fileState.copy(discoveredDevices = devices)
+            }
+        }
+
         viewModelScope.launch {
             settingsRepository.userNameFlow.collect { userName ->
                 fileState = fileState.copy(userName = userName)
@@ -160,6 +181,10 @@ class DocViewModel(application: Application) :
         receiveManager.stopServer()
     }
 
+    fun refreshUdp() {
+        udpManager.refreshDevices()
+    }
+
     fun sendText() {
         val type = fileState.packetType ?: return
         viewModelScope.launch {
@@ -174,9 +199,11 @@ class DocViewModel(application: Application) :
             result.onSuccess {
                 historyRepository.updateOffset(historyId.toInt(), history.totalLength)
                 sendSessionRecords.add(0, history.copy(id = historyId.toInt(), offset = history.totalLength))
+                Logger.logInfo("ViewModel", "TextSendSuccess", "文本发送成功")
                 _uiEvent.emit("发送成功")
             }.onFailure { e ->
                 sendSessionRecords.add(0, history.copy(id = historyId.toInt()))
+                Logger.logError("ViewModel", "TextSendFailed", e)
                 _uiEvent.emit("发送失败: ${e.message}")
             }
         }
@@ -211,8 +238,10 @@ class DocViewModel(application: Application) :
             val result = socketSendClient.send(fileState.inputIp, fileState.port, type, content)
             result.onSuccess {
                 sendSessionRecords.add(0, history.copy(id = historyId.toInt(), offset = history.totalLength))
+                Logger.logInfo("ViewModel", "FileSendSuccess", "文件发送成功: ${fileState.filename}")
             }.onFailure { e ->
                 sendSessionRecords.add(0, history.copy(id = historyId.toInt()))
+                Logger.logError("ViewModel", "FileSendFailed", e)
                 _uiEvent.emit("发送失败: ${e.message}")
             }
         }
@@ -238,9 +267,11 @@ class DocViewModel(application: Application) :
                 val result = socketSendClient.send(history.targetIp, fileState.port, type, content)
                 result.onSuccess {
                     sendSessionRecords.add(0, history.copy(offset = history.totalLength))
+                    Logger.logInfo("ViewModel", "BreakpointSendSuccess", "续传成功: ${history.name}")
                     _uiEvent.emit("续传成功")
                 }.onFailure { e ->
                     sendSessionRecords.add(0, history)
+                    Logger.logError("ViewModel", "BreakpointSendFailed", e)
                     _uiEvent.emit("续传失败: ${e.message}")
                 }
             } catch (e: Exception) {

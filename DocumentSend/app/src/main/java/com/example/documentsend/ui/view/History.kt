@@ -44,6 +44,7 @@ import java.util.Date
 import java.util.Locale
 import com.example.documentsend.data.HistoryType
 import com.example.documentsend.viewmodel.DocViewModel
+import com.example.documentsend.utils.StorageUtils
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -117,19 +118,6 @@ fun History(
             }
         }
     }
-
-    if (showDialog) {
-        AlertDialog(
-            onDismissRequest = { showDialog = false },
-            title = { Text("提示") },
-            text = { Text(dialogMessage) },
-            confirmButton = {
-                TextButton(onClick = { showDialog = false }) {
-                    Text("确定")
-                }
-            }
-        )
-    }
 }
 
 // 单条历史记录卡片
@@ -196,7 +184,7 @@ fun HistoryCard(history: com.example.documentsend.data.History, docViewModel: Do
                 Column(horizontalAlignment = Alignment.End) {
                     // 文件大小
                     Text(
-                        text = formatFileSize(history.totalLength),
+                        text = StorageUtils.formatFileSize(history.totalLength),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -246,13 +234,4 @@ fun HistoryCard(history: com.example.documentsend.data.History, docViewModel: Do
             )
         }
     }
-}
-
-// 将字节数格式化为可读的文件大小（如 "1.23 MB"）
-fun formatFileSize(size: Long): String {
-    if (size <= 0) return "0 B"
-    val units = arrayOf("B", "KB", "MB", "GB", "TB")
-    val digitGroups = (Math.log10(size.toDouble()) / Math.log10(1024.0)).toInt()
-    val safeIndex = digitGroups.coerceIn(0, units.size - 1)
-    return String.format("%.2f %s", size / Math.pow(1024.0, digitGroups.toDouble()), units[safeIndex])
 }

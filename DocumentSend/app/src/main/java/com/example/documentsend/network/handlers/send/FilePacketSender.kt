@@ -1,5 +1,6 @@
 package com.example.documentsend.network.handlers.send
 
+import com.example.documentsend.log.Logger
 import com.example.documentsend.manager.TransferManager
 import com.example.documentsend.network.PacketHeader
 import com.example.documentsend.network.PacketType
@@ -20,6 +21,8 @@ class FilePacketSender(
             val fileNameBytes = content.fileName.toByteArray(Charsets.UTF_8)
             val fileLength = content.fileLength
             val offset = content.offset
+
+            Logger.logInfo("Network", "FileSendStart", "开始发送文件: ${content.fileName}, 大小: $fileLength, offset: $offset")
 
             // skip offset 字节
             var skipRemaining = offset
@@ -75,8 +78,10 @@ class FilePacketSender(
             }
 
             transferManager.setIdle()
+            Logger.logInfo("Network", "FileSendComplete", "文件发送完成: ${content.fileName}")
             Result.success(Unit)
         } catch (e: Exception) {
+            Logger.logError("Network", "FileSendFailed", e)
             transferManager.setIdle()
             Result.failure(e)
         }

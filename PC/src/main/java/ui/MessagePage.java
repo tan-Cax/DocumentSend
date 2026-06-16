@@ -7,11 +7,16 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import listener.IDeviceDiscoveryListener;
 import network.SocketClient;
+import udp.UdpService;
 import utils.AppConfig;
 
 public class MessagePage extends StackPane {
+    private final TextField ipField = new TextField();
+    private final TextField portField = new TextField();
     private final TextFlow chatFlow = new TextFlow();
+    private final DeviceDiscoveryPanel devicePanel;
 
     public MessagePage() {
         this.setFocusTraversable(true);
@@ -21,19 +26,25 @@ public class MessagePage extends StackPane {
         layout.setStyle("-fx-background-color: white;");
 
         // 目标地址栏
-        TextField ipField = new TextField();
+        ipField.setId("msgIpField");
         ipField.setPromptText("目标 IP");
         ipField.setText(AppConfig.getTargetIp());
         ipField.textProperty().addListener((obs, oldV, newV) -> AppConfig.setTargetIp(newV));
         ipField.setPrefWidth(140);
 
-        TextField portField = new TextField();
+        portField.setId("msgPortField");
         portField.setPromptText("端口");
         portField.setText(String.valueOf(AppConfig.getSendPort()));
         portField.setPrefWidth(70);
 
         HBox targetBar = new HBox(10, new Label("目标:"), ipField, portField);
         targetBar.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
+        // 设备发现面板
+        devicePanel = new DeviceDiscoveryPanel(info -> {
+            ipField.setText(info.getIp());
+            portField.setText(String.valueOf(info.getTcpPort()));
+        });
 
         // 输入栏（多行输入框，自动换行可滚动）
         TextArea inputArea = new TextArea();
@@ -71,7 +82,7 @@ public class MessagePage extends StackPane {
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
         VBox.setVgrow(scrollPane, Priority.ALWAYS);
 
-        layout.getChildren().addAll(targetBar, sendBar, scrollPane);
+        layout.getChildren().addAll(targetBar, devicePanel, sendBar, scrollPane);
         getChildren().add(layout);
 
         Platform.runLater(() -> this.requestFocus());
@@ -89,5 +100,17 @@ public class MessagePage extends StackPane {
 
     public void appendError(String msg) {
         appendText("[错误] " + msg, Color.RED);
+    }
+
+    public void addDiscoveredDevice(IDeviceDiscoveryListener.DeviceInfo info) {
+        devicePanel.addDevice(info);
+    }
+
+    public void clearDiscoveredDevices() {
+        devicePanel.clearDevices();
+    }
+
+    public void setUdpService(UdpService svc) {
+        devicePanel.setUdpService(svc);
     }
 }

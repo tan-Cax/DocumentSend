@@ -8,7 +8,10 @@ class Repository(private val dao: IpAddressDao) {
     fun getIpHistory() = dao.getAllIpAddresses()
 
     suspend fun insertIP(ipAddress: IpAddress) {
-        dao.insertIPAddress(ipAddress)
+        val exists = dao.countByIp(ipAddress.ip) > 0
+        if (!exists) {
+            dao.insertIPAddress(ipAddress)
+        }
     }
 
     suspend fun updateIP(ipAddress: IpAddress) {

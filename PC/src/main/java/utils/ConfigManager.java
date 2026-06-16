@@ -1,5 +1,7 @@
 package utils;
 
+import network.NetworkErrorCallback;
+
 import java.io.*;
 import java.util.Properties;
 
@@ -19,7 +21,7 @@ public class ConfigManager {
             try (FileInputStream fis = new FileInputStream(configFile)) {
                 properties.load(fis);
             } catch (IOException e) {
-                System.err.println("加载配置文件失败: " + e.getMessage());
+                NetworkErrorCallback.getInstance().generalError("加载配置文件失败: " + e.getMessage());
             }
         }
     }
@@ -28,7 +30,7 @@ public class ConfigManager {
         try (FileOutputStream fos = new FileOutputStream(configFile)) {
             properties.store(fos, "DocumentSend Config");
         } catch (IOException e) {
-            System.err.println("保存配置文件失败: " + e.getMessage());
+            NetworkErrorCallback.getInstance().generalError("保存配置文件失败: " + e.getMessage());
         }
     }
 

@@ -1,6 +1,7 @@
 package utils;
 
 import java.io.File;
+import java.util.UUID;
 
 public class AppConfig {
     private static final String DEFAULT_SAVE_DIR = System.getProperty("user.dir") + File.separator + "storage";
@@ -15,6 +16,7 @@ public class AppConfig {
     private static int sendPort;
     private static String username;
     private static String targetIp;
+    private static String uuid;
 
     static {
         saveDir = DEFAULT_SAVE_DIR;
@@ -38,6 +40,16 @@ public class AppConfig {
         sendPort = configManager.getInt("sendPort", DEFAULT_SEND_PORT);
         username = configManager.getString("username", DEFAULT_USERNAME);
         targetIp = configManager.getString("targetIp", DEFAULT_TARGET_IP);
+        
+        // 加载或生成 UUID
+        uuid = configManager.getString("uuid", "");
+        if (uuid.isEmpty()) {
+            uuid = UUID.randomUUID().toString();
+            configManager.set("uuid", uuid);
+            System.out.println("生成新的设备 UUID: " + uuid);
+        } else {
+            System.out.println("加载设备 UUID: " + uuid);
+        }
 
         File dir = new File(saveDir);
         if (!dir.exists()) {
@@ -82,4 +94,7 @@ public class AppConfig {
         targetIp = ip;
         configManager.set("targetIp", ip);
     }
+    
+    // --- UUID ---
+    public static String getUuid() { return uuid; }
 }

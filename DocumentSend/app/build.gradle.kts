@@ -49,8 +49,6 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.constraintlayout)
-    implementation(libs.androidx.media3.exoplayer)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -63,6 +61,9 @@ dependencies {
 
     // ViewModel Compose
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.2")
+
+    // ProcessLifecycleOwner (for background detection)
+    implementation("androidx.lifecycle:lifecycle-process:2.8.2")
 
     // LiveData -> Compose
     implementation("androidx.compose.runtime:runtime-livedata:1.6.7")

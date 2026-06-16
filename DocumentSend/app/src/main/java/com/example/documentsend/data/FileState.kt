@@ -1,6 +1,7 @@
 package com.example.documentsend.data
 
 import android.net.Uri
+import com.example.documentsend.manager.DiscoveredDevice
 import com.example.documentsend.manager.TransferProgress
 import com.example.documentsend.network.PacketType
 
@@ -20,5 +21,7 @@ data class FileState (
     val pendingSaveHistoryId: Int = -1,     // 待保存的记录ID
     val pendingSaveFileName: String = "",  // 待保存的文件名
     val pendingSaveFileSize: Long = 0,     // 待保存的文件大小
-    val pendingSaveTempPath: String = ""   // 待保存的临时路径
+    val pendingSaveTempPath: String = "",  // 待保存的临时路径
+    val deviceUuid: String = "",           // 设备唯一标识
+    val discoveredDevices: List<DiscoveredDevice> = emptyList()  // 发现的局域网设备
 )

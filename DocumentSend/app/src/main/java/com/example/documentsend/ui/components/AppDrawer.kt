@@ -14,7 +14,8 @@ import com.example.documentsend.ui.theme.royal_blue
 
 @Composable
 fun AppDrawerContent(
-    onNavigate: (String) -> Unit
+    onNavigate: (String) -> Unit,
+    currentRoute: String = ""
 ) {
     ModalDrawerSheet(
         modifier = Modifier.width(280.dp),
@@ -31,7 +32,7 @@ fun AppDrawerContent(
         NavigationDrawerItem(
             icon = { Icon(imageVector = Icons.Default.List, contentDescription = "History") },
             label = { Text("History") },
-            selected = false,
+            selected = currentRoute == "history",
             onClick = {
                 onNavigate("history")
             },
@@ -40,7 +41,7 @@ fun AppDrawerContent(
         NavigationDrawerItem(
             icon = { Icon(imageVector = Icons.Default.Settings, contentDescription = "Settings") },
             label = { Text("Settings") },
-            selected = false,
+            selected = currentRoute == "settings",
             onClick = {
                 onNavigate("settings")
             },

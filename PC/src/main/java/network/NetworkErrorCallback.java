@@ -14,7 +14,6 @@ public class NetworkErrorCallback {
     }
 
     public void sendError(String msg) {
-        System.err.println(msg);
         try {
             Platform.runLater(() -> {
                 MainLayout ml = MainLayout.getInstance();
@@ -26,7 +25,6 @@ public class NetworkErrorCallback {
     }
 
     public void textError(String msg) {
-        System.err.println(msg);
         try {
             Platform.runLater(() -> {
                 MainLayout ml = MainLayout.getInstance();
@@ -38,11 +36,24 @@ public class NetworkErrorCallback {
     }
 
     public void receiveError(String msg) {
-        System.err.println(msg);
         try {
             Platform.runLater(() -> {
                 MainLayout ml = MainLayout.getInstance();
                 if (ml != null) ml.getFilePage().appendError(msg);
+            });
+        } catch (IllegalStateException e) {
+            // JavaFX not initialized (e.g. during tests)
+        }
+    }
+
+    public void generalError(String msg) {
+        try {
+            Platform.runLater(() -> {
+                MainLayout ml = MainLayout.getInstance();
+                if (ml != null) {
+                    ml.getMessagePage().appendError(msg);
+                    ml.getFilePage().appendError(msg);
+                }
             });
         } catch (IllegalStateException e) {
             // JavaFX not initialized (e.g. during tests)

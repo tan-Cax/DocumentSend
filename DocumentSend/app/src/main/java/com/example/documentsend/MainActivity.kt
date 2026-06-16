@@ -13,13 +13,16 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.ProcessLifecycleOwner
+import com.example.documentsend.log.Logger
 import com.example.documentsend.manager.TransferNotificationService
 import com.example.documentsend.navigation.AppNavigation
 import com.example.documentsend.utils.StorageUtils
 
 class MainActivity : ComponentActivity() {
 
-    // 注册通知权限请求
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
             if (permissions.all { it.value }) {
@@ -27,15 +30,22 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-    // 注册存储权限系统设置页面回调
     private val storagePermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-            // 从系统设置返回，不做额外处理
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
+
+    private val backgroundSaveObserver = LifecycleEventObserver { _, event ->
+        if (event == Lifecycle.Event.ON_STOP) {
+            Logger.saveToFile()
         }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        ProcessLifecycleOwner.get().lifecycle.addObserver(backgroundSaveObserver)
+
+        Logger.i("MainActivity", "App启动")
 
         requestNotificationPermission()
         requestStoragePermission()
@@ -43,6 +53,13 @@ class MainActivity : ComponentActivity() {
         setContent {
             AppNavigation()
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        ProcessLifecycleOwner.get().lifecycle.removeObserver(backgroundSaveObserver)
+        Logger.i("MainActivity", "App销毁")
+        Logger.saveToFile()
     }
 
     private fun requestNotificationPermission() {

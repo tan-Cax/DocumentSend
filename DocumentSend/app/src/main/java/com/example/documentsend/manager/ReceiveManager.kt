@@ -1,6 +1,7 @@
 package com.example.documentsend.manager
 
 import android.content.Context
+import com.example.documentsend.log.Logger
 import com.example.documentsend.network.SocketServer
 import com.example.documentsend.network.handlers.INetworkListener
 import com.example.documentsend.repository.HistoryRepository
@@ -38,6 +39,7 @@ class ReceiveManager private constructor() {
             historyRepository = historyRepository,
             autoSave = autoSave
         )
+        Logger.logInfo("Manager", "ReceiveInit", "接收管理器初始化, autoSave=$autoSave")
     }
 
     fun startServer(port: Int, listener: INetworkListener) {
@@ -55,6 +57,7 @@ class ReceiveManager private constructor() {
     }
 
     fun stopServer() {
+        Logger.logInfo("Manager", "ReceiveStop", "接收管理器停止")
         socketServer?.stop()
     }
 }

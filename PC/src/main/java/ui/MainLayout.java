@@ -3,13 +3,22 @@ package ui;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
+import listener.IDeviceDiscoveryListener;
+import udp.UdpService;
 import utils.AppConfig;
 import utils.NetworkUtils;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MainLayout extends BorderPane {
     private static MainLayout instance;
+    private static UdpService udpService;
+    private static final List<IDeviceDiscoveryListener.DeviceInfo> pendingDevices = new ArrayList<>();
+
     private final StackPane contentArea = new StackPane();
     private final MessagePage messagePage = new MessagePage();
     private final FileTransferPage filePage = new FileTransferPage();
@@ -19,6 +28,15 @@ public class MainLayout extends BorderPane {
     public MainLayout() {
         instance = this;
         this.setStyle("-fx-background-color: white;");
+
+        // 传递 UdpService 到包含设备面板的子页面
+        if (udpService != null) {
+            messagePage.setUdpService(udpService);
+            filePage.setUdpService(udpService);
+        }
+
+        // 清空待处理设备列表到各个页面
+        flushPendingDevices();
 
         HBox topNav = new HBox();
         topNav.setPadding(new Insets(15, 0, 15, 20));
@@ -54,6 +72,26 @@ public class MainLayout extends BorderPane {
         showPage(messagePage);
     }
 
+    public static synchronized void addPendingDevice(IDeviceDiscoveryListener.DeviceInfo info) {
+        MainLayout inst = instance;
+        if (inst != null) {
+            Platform.runLater(() -> {
+                inst.messagePage.addDiscoveredDevice(info);
+                inst.filePage.addDiscoveredDevice(info);
+            });
+        } else {
+            pendingDevices.add(info);
+        }
+    }
+
+    private void flushPendingDevices() {
+        for (IDeviceDiscoveryListener.DeviceInfo info : pendingDevices) {
+            messagePage.addDiscoveredDevice(info);
+            filePage.addDiscoveredDevice(info);
+        }
+        pendingDevices.clear();
+    }
+
     private Label createNavItem(String text, StackPane page) {
         Label label = new Label(text);
         label.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1976D2; -fx-padding: 3 6;");
@@ -84,7 +122,7 @@ public class MainLayout extends BorderPane {
     }
 
     private void showPage(StackPane page) {
-        for (javafx.scene.Node child : contentArea.getChildren()) {
+        for (Node child : contentArea.getChildren()) {
             child.setVisible(false);
         }
         page.setVisible(true);
@@ -94,6 +132,10 @@ public class MainLayout extends BorderPane {
 
     public static MainLayout getInstance() {
         return instance;
+    }
+
+    public static void setUdpService(UdpService svc) {
+        udpService = svc;
     }
 
     public MessagePage getMessagePage() {

@@ -1,9 +1,11 @@
 import javafx.application.Application;
 import javafx.application.Platform;
+import listener.IDeviceDiscoveryListener;
 import listener.INetworkListener;
 import network.SocketConnectionManager;
 import ui.App;
 import ui.MainLayout;
+import udp.UdpService;
 import utils.AppConfig;
 import utils.NetworkUtils;
 
@@ -11,6 +13,12 @@ import java.io.File;
 import java.net.InetAddress;
 
 public class Main {
+    private static UdpService udpService;
+
+    public static UdpService getUdpService() {
+        return udpService;
+    }
+
     public static void main(String[] args) {
         // 启动检测：确保 storage 目录存在
         File storageDir = AppConfig.getSaveDirFile();
@@ -66,6 +74,32 @@ public class Main {
         });
 
         engine.startListening(AppConfig.getListenPort());
+
+        // 启动 UDP 服务（设备发现）
+        udpService = new UdpService(AppConfig.getUuid(), AppConfig.getUsername(), AppConfig.getListenPort());
+        udpService.setDeviceDiscoveryListener(new IDeviceDiscoveryListener() {
+            @Override
+            public void onDeviceDiscovered(IDeviceDiscoveryListener.DeviceInfo deviceInfo) {
+                System.out.println(">>> 发现新设备: " + deviceInfo);
+                MainLayout.addPendingDevice(deviceInfo);
+            }
+
+            @Override
+            public void onDeviceLost(String uuid) {
+                System.out.println(">>> 设备离线: " + uuid);
+            }
+        });
+        udpService.startListening(AppConfig.getSendPort());
+
+        // 将 UdpService 传递给 MainLayout（UI 组件创建时使用）
+        MainLayout.setUdpService(udpService);
+
+        // 注册关闭钩子，清理资源
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("正在关闭应用...");
+            udpService.stop();
+            engine.stop();
+        }));
 
         // 启动 JavaFX UI
         Application.launch(App.class, args);

@@ -14,7 +14,9 @@ import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import listener.IDeviceDiscoveryListener;
 import network.SocketClient;
+import udp.UdpService;
 import utils.AppConfig;
 
 import java.io.File;
@@ -23,6 +25,7 @@ import java.util.List;
 public class FileTransferPage extends StackPane {
     private final TextField ipField = new TextField();
     private final TextField portField = new TextField();
+    private final DeviceDiscoveryPanel devicePanel;
     private final Label filePathLabel = new Label("未选择文件");
     private final TextFlow logFlow = new TextFlow();
     private final VBox dropZone = new VBox(10);
@@ -47,6 +50,12 @@ public class FileTransferPage extends StackPane {
 
         HBox targetBar = new HBox(10, new Label("目标:"), ipField, portField);
         targetBar.setAlignment(Pos.CENTER_LEFT);
+
+        // 设备发现面板
+        devicePanel = new DeviceDiscoveryPanel(info -> {
+            ipField.setText(info.getIp());
+            portField.setText(String.valueOf(info.getTcpPort()));
+        });
 
         // 拖拽区域
         dropZone.setAlignment(Pos.CENTER);
@@ -143,7 +152,7 @@ public class FileTransferPage extends StackPane {
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
         VBox.setVgrow(scrollPane, Priority.ALWAYS);
 
-        layout.getChildren().addAll(targetBar, dropZone, btnBar, scrollPane);
+        layout.getChildren().addAll(targetBar, devicePanel, dropZone, btnBar, scrollPane);
         getChildren().add(layout);
 
         Platform.runLater(() -> this.requestFocus());
@@ -187,5 +196,17 @@ public class FileTransferPage extends StackPane {
         if (bytes < 1024 * 1024) return String.format("%.1f KB", bytes / 1024.0);
         if (bytes < 1024 * 1024 * 1024) return String.format("%.1f MB", bytes / (1024.0 * 1024));
         return String.format("%.2f GB", bytes / (1024.0 * 1024 * 1024));
+    }
+
+    public void addDiscoveredDevice(IDeviceDiscoveryListener.DeviceInfo info) {
+        devicePanel.addDevice(info);
+    }
+
+    public void clearDiscoveredDevices() {
+        devicePanel.clearDevices();
+    }
+
+    public void setUdpService(UdpService svc) {
+        devicePanel.setUdpService(svc);
     }
 }

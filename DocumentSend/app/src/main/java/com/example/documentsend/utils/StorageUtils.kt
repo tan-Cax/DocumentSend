@@ -25,7 +25,7 @@ object StorageUtils {
         }
     }
 
-    fun getDownloadDir(context: Context): File {
+    suspend fun getDownloadDir(context: Context): File {
         val dir = NetworkConfigUtils.getCurrentSavePath(context)
         if (!dir.exists()) {
             dir.mkdirs()

@@ -27,6 +27,7 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
         val RECEIVE_PORT_KEY = intPreferencesKey("receive_port")
         val SAVE_PATH_KEY = stringPreferencesKey("save_path")
         val TARGET_IP_KEY = stringPreferencesKey("target_ip")
+        val DEVICE_UUID_KEY = stringPreferencesKey("device_uuid")
     }
 
     val themeModeFlow: Flow<Int> = dataStore.data.map { preferences ->
@@ -126,6 +127,16 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
     suspend fun setTargetIp(ip: String) {
         dataStore.edit { preferences ->
             preferences[TARGET_IP_KEY] = ip
+        }
+    }
+
+    val deviceUuidFlow: Flow<String> = dataStore.data.map { preferences ->
+        preferences[DEVICE_UUID_KEY] ?: ""
+    }
+
+    suspend fun setDeviceUuid(uuid: String) {
+        dataStore.edit { preferences ->
+            preferences[DEVICE_UUID_KEY] = uuid
         }
     }
 }

@@ -28,7 +28,7 @@ fun MainScaffold(
 
     ModalNavigationDrawer(
         drawerState = drawerState,
-        drawerContent = { AppDrawerContent(onNavigate = onNavigate) }
+        drawerContent = { AppDrawerContent(onNavigate = onNavigate, currentRoute = currentRoute) }
     ) {
         Scaffold(
             topBar = {

@@ -1,5 +1,6 @@
 package com.example.documentsend.network.handlers.send
 
+import com.example.documentsend.log.Logger
 import com.example.documentsend.network.PacketHeader
 import com.example.documentsend.network.PacketType
 import java.io.DataOutputStream
@@ -14,6 +15,7 @@ class TextPacketSender : IPacketSender {
         return try {
 
             val messageBytes = content.message.toByteArray(Charsets.UTF_8)
+            Logger.logInfo("Network", "TextSend", "发送文本, 长度: ${messageBytes.size}")
 
             val header = PacketHeader(
                 type = packetType.value,
@@ -29,6 +31,7 @@ class TextPacketSender : IPacketSender {
 
             Result.success(Unit)
         } catch (e: Exception) {
+            Logger.logError("Network", "TextSendFailed", e)
             Result.failure(e)
         }
     }
