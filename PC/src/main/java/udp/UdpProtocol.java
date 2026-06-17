@@ -2,22 +2,9 @@ package udp;
 
 import network.NetworkErrorCallback;
 
-/**
- * UDP 协议定义
- * 协议格式：
- * {
- *     "type": "ANNOUNCE",
- *     "uuid": "xxxxxxxx",
- *     "deviceName": "我的设备",
- *     "device": "pc",
- *     "tcpPort": 6666
- * }
- */
 public class UdpProtocol {
-    // 协议类型常量
     public static final String TYPE_ANNOUNCE = "ANNOUNCE";
 
-    // 设备类型常量
     public static final String DEVICE_PC = "pc";
     public static final String DEVICE_ANDROID = "android";
 
@@ -26,31 +13,32 @@ public class UdpProtocol {
     private final String name;
     private final String device;
     private final int tcpPort;
+    private final boolean reply;
 
     public UdpProtocol(String type, String uuid, String name, String device, int tcpPort) {
+        this(type, uuid, name, device, tcpPort, false);
+    }
+
+    public UdpProtocol(String type, String uuid, String name, String device, int tcpPort, boolean reply) {
         this.type = type;
         this.uuid = uuid;
         this.name = name;
         this.device = device;
         this.tcpPort = tcpPort;
+        this.reply = reply;
     }
 
-    /**
-     * 序列化为 JSON 字符串
-     */
     public String toJson() {
         return "{" +
                 "\"type\":\"" + escapeJson(type) + "\"," +
                 "\"uuid\":\"" + escapeJson(uuid) + "\"," +
                 "\"deviceName\":\"" + escapeJson(name) + "\"," +
                 "\"device\":\"" + escapeJson(device) + "\"," +
-                "\"tcpPort\":" + tcpPort +
+                "\"tcpPort\":" + tcpPort + "," +
+                "\"reply\":" + reply +
                 "}";
     }
 
-    /**
-     * 从 JSON 字符串反序列化
-     */
     public static UdpProtocol fromJson(String json) {
         if (json == null || json.isEmpty()) {
             return null;
@@ -64,8 +52,9 @@ public class UdpProtocol {
             String name = extractStringValueSafe(json, "deviceName", "");
             String device = extractStringValue(json, "device");
             int tcpPort = extractIntValue(json, "tcpPort");
+            boolean reply = extractBooleanValueSafe(json, "reply", false);
 
-            return new UdpProtocol(type, uuid, name, device, tcpPort);
+            return new UdpProtocol(type, uuid, name, device, tcpPort, reply);
         } catch (Exception e) {
             NetworkErrorCallback.getInstance().generalError("UDP JSON 解析失败: " + e.getMessage());
             return null;
@@ -117,6 +106,23 @@ public class UdpProtocol {
         return Integer.parseInt(json.substring(startIndex, endIndex));
     }
 
+    private static boolean extractBooleanValueSafe(String json, String key, boolean defaultValue) {
+        try {
+            String searchKey = "\"" + key + "\":";
+            int startIndex = json.indexOf(searchKey);
+            if (startIndex == -1) {
+                return defaultValue;
+            }
+            startIndex += searchKey.length();
+
+            if (json.startsWith("true", startIndex)) return true;
+            if (json.startsWith("false", startIndex)) return false;
+            return defaultValue;
+        } catch (Exception e) {
+            return defaultValue;
+        }
+    }
+
     private static String escapeJson(String str) {
         if (str == null) return "";
         return str.replace("\\", "\\\\")
@@ -135,12 +141,12 @@ public class UdpProtocol {
                   .replace("\\\\", "\\");
     }
 
-    // Getters
     public String getType() { return type; }
     public String getUuid() { return uuid; }
     public String getName() { return name; }
     public String getDevice() { return device; }
     public int getTcpPort() { return tcpPort; }
+    public boolean isReply() { return reply; }
 
     @Override
     public String toString() {

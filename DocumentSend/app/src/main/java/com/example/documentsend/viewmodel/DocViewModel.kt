@@ -111,7 +111,9 @@ class DocViewModel(application: Application) :
             }
         }
         viewModelScope.launch {
-            settingsRepository.saveToHistoryFlow.collect { saveToHistory = it }
+            settingsRepository.saveToHistoryFlow.collect { saveToHistory = it
+                receiveManager.setSaveToHistory(it)
+            }
         }
         viewModelScope.launch {
             settingsRepository.autoSaveFlow.collect { autoSave ->
@@ -121,7 +123,8 @@ class DocViewModel(application: Application) :
                     context = application,
                     transferManager = transferManager,
                     historyRepository = historyRepository,
-                    autoSave = autoSave
+                    autoSave = autoSave,
+                    saveToHistory = saveToHistory
                 )
                 receiveManager.restartServer()
             }
@@ -192,7 +195,11 @@ class DocViewModel(application: Application) :
                 content = fileState.inputMessage,
                 targetIp = fileState.inputIp,
             )
-            val historyId = historyRepository.insertHistory(history)
+            val historyId = if (saveToHistory) {
+                historyRepository.insertHistory(history)
+            } else {
+                -1L
+            }
 
             val content = SendContent.fromText(fileState.inputMessage)
             val result = socketSendClient.send(fileState.inputIp, fileState.port, type, content)
@@ -221,7 +228,11 @@ class DocViewModel(application: Application) :
                 targetIp = fileState.inputIp,
                 totalLength = fileState.fileSize
             )
-            val historyId = historyRepository.insertHistory(history)
+            val historyId = if (saveToHistory) {
+                historyRepository.insertHistory(history)
+            } else {
+                -1L
+            }
 
             val content = SendContent.fromUri(
                 getApplication<Application>(),

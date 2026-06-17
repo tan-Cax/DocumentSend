@@ -8,6 +8,7 @@ data class UdpAnnounce(
     val device: String,
     val tcpPort: Int,
     val deviceName: String = "",
+    val reply: Boolean = false,
     val senderIp: String = ""
 ) {
     fun toJson(): String {
@@ -17,6 +18,7 @@ data class UdpAnnounce(
             put("device", device)
             put("tcpPort", tcpPort)
             put("deviceName", deviceName)
+            put("reply", reply)
         }.toString()
     }
 
@@ -35,7 +37,8 @@ data class UdpAnnounce(
                     uuid = obj.getString("uuid"),
                     device = obj.getString("device"),
                     tcpPort = obj.getInt("tcpPort"),
-                    deviceName = obj.optString("deviceName", "")
+                    deviceName = obj.optString("deviceName", ""),
+                    reply = obj.optBoolean("reply", false)
                 )
             } catch (e: Exception) {
                 null

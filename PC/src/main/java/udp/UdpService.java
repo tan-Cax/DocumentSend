@@ -8,9 +8,6 @@ import java.net.InetAddress;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * UDP 业务服务 - 负责设备发现和设备列表维护
- */
 public class UdpService {
     private final UdpManager udpManager;
     private final ConcurrentHashMap<String, DeviceInfo> discoveredDevices;
@@ -44,7 +41,8 @@ public class UdpService {
                 localUuid,
                 localName,
                 UdpProtocol.DEVICE_PC,
-                localTcpPort
+                localTcpPort,
+                false
         );
 
         String json = protocol.toJson();
@@ -98,7 +96,10 @@ public class UdpService {
                 System.out.println("[UDP] 已知设备更新: " + protocol.getUuid());
             }
 
-            replyToDevice(senderAddress);
+            // 仅对广播（reply=false）回复，不对回复再回复
+            if (!protocol.isReply()) {
+                replyToDevice(senderAddress);
+            }
 
         } catch (Exception e) {
             NetworkErrorCallback.getInstance().generalError("处理 UDP 数据异常: " + e.getMessage());
@@ -111,7 +112,8 @@ public class UdpService {
                 localUuid,
                 localName,
                 UdpProtocol.DEVICE_PC,
-                localTcpPort
+                localTcpPort,
+                true
         );
 
         String json = protocol.toJson();

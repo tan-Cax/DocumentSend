@@ -33,10 +33,11 @@ class FilePacketSender(
             }
 
             // 写入 PacketHeader
+            val remainingFileLength = fileLength - offset
             val header = PacketHeader(
                 type = packetType.value,
                 nameLength = fileNameBytes.size.toShort(),
-                bodyLength = fileLength,
+                bodyLength = fileNameBytes.size.toLong() + remainingFileLength,
                 offset = offset,
                 totalLength = fileLength
             )

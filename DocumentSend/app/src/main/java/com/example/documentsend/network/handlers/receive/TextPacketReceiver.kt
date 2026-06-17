@@ -11,7 +11,8 @@ import com.example.documentsend.utils.StreamUtils
 import java.io.DataInputStream
 
 class TextPacketReceiver(
-    private val historyRepository: HistoryRepository
+    private val historyRepository: HistoryRepository,
+    var saveToHistory: Boolean = true
 ) : IPacketReceiver {
 
     override suspend fun receive(header: PacketHeader, dis: DataInputStream, listener: INetworkListener, senderIp: String): Result<Unit> {
@@ -41,7 +42,9 @@ class TextPacketReceiver(
                 offset = text.toByteArray().size.toLong(),
                 text = text
             )
-            historyRepository.insertHistory(record)
+            if (saveToHistory) {
+                historyRepository.insertHistory(record)
+            }
             listener.onReceiveRecord(record)
 
             listener.onTextMessage(text)

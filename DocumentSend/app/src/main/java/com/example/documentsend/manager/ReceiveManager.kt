@@ -30,16 +30,22 @@ class ReceiveManager private constructor() {
         context: Context,
         transferManager: TransferManager,
         historyRepository: HistoryRepository,
-        autoSave: Boolean = true
+        autoSave: Boolean = true,
+        saveToHistory: Boolean = true
     ) {
         socketServer?.stop()
         socketServer = SocketServer(
             context = context,
             transferManager = transferManager,
             historyRepository = historyRepository,
-            autoSave = autoSave
+            autoSave = autoSave,
+            saveToHistory = saveToHistory
         )
-        Logger.logInfo("Manager", "ReceiveInit", "接收管理器初始化, autoSave=$autoSave")
+        Logger.logInfo("Manager", "ReceiveInit", "接收管理器初始化, autoSave=$autoSave, saveToHistory=$saveToHistory")
+    }
+
+    fun setSaveToHistory(enabled: Boolean) {
+        socketServer?.setSaveToHistory(enabled)
     }
 
     fun startServer(port: Int, listener: INetworkListener) {

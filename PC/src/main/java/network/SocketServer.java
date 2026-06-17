@@ -41,7 +41,7 @@ public class SocketServer {
                     try {
                         header = PacketHeader.readFrom(dis);
                     } catch (IOException e) {
-                        NetworkErrorCallback.getInstance().receiveError("解析包头失败或断开连接: " + e.getMessage());
+                        System.out.println("[网络] 解析包头失败或断开连接: " + e.getMessage());
                         break;
                     }
 
@@ -62,7 +62,7 @@ public class SocketServer {
                     }
                 }
             } catch (IOException e) {
-                NetworkErrorCallback.getInstance().receiveError("服务端读取异常或连接已断开: " + e.getMessage());
+                System.out.println("[网络] 服务端读取异常或连接已断开: " + e.getMessage());
             } finally {
                 isReading = false;
                 if (listener != null) {

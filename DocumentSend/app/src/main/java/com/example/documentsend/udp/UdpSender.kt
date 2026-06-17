@@ -3,9 +3,6 @@ package com.example.documentsend.udp
 import com.example.documentsend.log.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.net.DatagramPacket
 import java.net.DatagramSocket
@@ -18,42 +15,8 @@ class UdpSender(
     private val tcpPort: Int,
     private val deviceName: String
 ) {
-    private var scope: CoroutineScope? = null
-    private var socket: DatagramSocket? = null
 
-    fun start() {
-        if (scope != null) return
-        Logger.logInfo("UDP", "SenderStart", "UDP广播发送器启动, 端口: $tcpPort")
-        scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-        scope!!.launch {
-            try {
-                socket = DatagramSocket().apply { broadcast = true }
-                val broadcastAddress = getBroadcastAddress() ?: run {
-                    Logger.logWarn("UDP", "SenderStart", "无法获取广播地址")
-                    return@launch
-                }
-                Logger.logInfo("UDP", "SenderStart", "广播地址: ${broadcastAddress.hostAddress}")
-                while (true) {
-                    val announce = UdpAnnounce(
-                        uuid = uuid,
-                        device = "android",
-                        tcpPort = tcpPort,
-                        deviceName = deviceName
-                    )
-                    val data = announce.toJson().toByteArray()
-                    val packet = DatagramPacket(data, data.size, broadcastAddress, UdpAnnounce.UDP_PORT)
-                    try {
-                        socket?.send(packet)
-                    } catch (_: Exception) {
-                    }
-                    delay(UdpAnnounce.BROADCAST_INTERVAL_MS)
-                }
-            } catch (_: Exception) {
-            }
-        }
-    }
-
-    fun forceBroadcast() {
+    fun broadcast() {
         Logger.logInfo("UDP", "ForceBroadcast", "手动发送UDP广播")
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -66,7 +29,8 @@ class UdpSender(
                     uuid = uuid,
                     device = "android",
                     tcpPort = tcpPort,
-                    deviceName = deviceName
+                    deviceName = deviceName,
+                    reply = false
                 )
                 val data = announce.toJson().toByteArray()
                 val packet = DatagramPacket(data, data.size, broadcastAddress, UdpAnnounce.UDP_PORT)
@@ -77,12 +41,30 @@ class UdpSender(
         }
     }
 
+    fun replyTo(targetIp: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val s = DatagramSocket()
+                val targetAddress = InetAddress.getByName(targetIp)
+                val announce = UdpAnnounce(
+                    uuid = uuid,
+                    device = "android",
+                    tcpPort = tcpPort,
+                    deviceName = deviceName,
+                    reply = true
+                )
+                val data = announce.toJson().toByteArray()
+                val packet = DatagramPacket(data, data.size, targetAddress, UdpAnnounce.UDP_PORT)
+                s.send(packet)
+                s.close()
+                Logger.logInfo("UDP", "ReplySent", "回复设备: $targetIp")
+            } catch (_: Exception) {
+            }
+        }
+    }
+
     fun stop() {
         Logger.logInfo("UDP", "SenderStop", "UDP广播发送器停止")
-        scope?.cancel()
-        scope = null
-        socket?.close()
-        socket = null
     }
 
     private fun getBroadcastAddress(): InetAddress? {

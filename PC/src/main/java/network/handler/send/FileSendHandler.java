@@ -17,18 +17,24 @@ public class FileSendHandler implements ISendHandler<File>{
             return;
         }
         String fileName = file.getName();
-        long fileNameLength = fileName.length();
         byte[] fileNameBytes = fileName.getBytes(StandardCharsets.UTF_8);
+        // long fileNameLength = fileName.length();
+        short nameLength = (short) fileNameBytes.length;
         long filelength = file.length();
         PacketType fileType = getTypeByFile(file);
 
         byte[] fileBytes = Files.readAllBytes(file.toPath());
 
+        long bodyLength = nameLength + filelength;
+
         PacketHeader header = new PacketHeader(
                 fileType.getValue(),
-                (short) fileNameLength,
-                filelength,
-                0,0
+                //(short) fileNameLength,
+                nameLength,
+                //filelength,
+                bodyLength,
+                0,
+                filelength
         );
 
         header.writeTo(dos);

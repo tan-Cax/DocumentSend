@@ -19,7 +19,8 @@ class FilePacketReceiver(
     private val context: Context,
     private val transferManager: TransferManager,
     private val historyRepository: HistoryRepository,
-    private val autoSave: Boolean = true
+    private val autoSave: Boolean = true,
+    var saveToHistory: Boolean = true
 ) : IPacketReceiver {
 
     override suspend fun receive(
@@ -58,13 +59,14 @@ class FilePacketReceiver(
             // 打开输出流（追加模式）
             val fos = FileOutputStream(file, header.offset > 0)
             val buffer = ByteArray(8192)
+            val fileDataLen = header.bodyLength - header.nameLength
             var totalRead = header.offset
-            var remainingBytes = header.bodyLength - header.offset
+            var remainingBytes = fileDataLen
             var lastOffsetSave = header.offset
 
             // 通知开始接收
-            Logger.logInfo("Network", "FileReceiveStart", "开始接收文件: $fileName, 大小: ${header.totalLength}, offset: ${header.offset}")
-            listener.onFileStarted(fileName, header.totalLength)
+            Logger.logInfo("Network", "FileReceiveStart", "开始接收文件: $fileName, 大小: $fileDataLen, offset: ${header.offset}")
+            listener.onFileStarted(fileName, header.offset + fileDataLen)
 
             // 循环接收
             try {
@@ -77,12 +79,16 @@ class FilePacketReceiver(
                     totalRead += read
                     remainingBytes -= read
 
-                    transferManager.updateReceivingProgress(fileName, totalRead, header.totalLength)
+                    transferManager.updateReceivingProgress(fileName, totalRead, header.offset + fileDataLen)
 
                     if (totalRead - lastOffsetSave >= 100 * 1024) {
-                        listener.onFileProgress(fileName, totalRead, header.totalLength)
+                        listener.onFileProgress(fileName, totalRead, header.offset + fileDataLen)
                         lastOffsetSave = totalRead
                     }
+                }
+
+                if (remainingBytes == 0L) {
+                    totalRead = header.offset + fileDataLen
                 }
             } finally {
                 fos.close()
@@ -98,15 +104,19 @@ class FilePacketReceiver(
                 filetypeString = com.example.documentsend.network.PacketType.fromValue(header.type)?.name ?: "FILE",
                 typeString = HistoryType.RECEIVE,
                 targetIp = senderIp,
-                totalLength = header.totalLength,
+                totalLength = header.offset + fileDataLen,
                 offset = totalRead
             )
-            val historyId = historyRepository.insertHistory(record)
+            val historyId = if (saveToHistory) {
+                historyRepository.insertHistory(record)
+            } else {
+                -1L
+            }
             listener.onReceiveRecord(record)
 
             // 通知完成 - 统一走 onFileReadyToSave，让 ViewModel 处理
             Logger.logInfo("Network", "FileReceiveComplete", "文件接收完成: $fileName, 已接收: $totalRead")
-            listener.onFileReadyToSave(historyId.toInt(), finalFile.name, header.totalLength, finalFile.absolutePath)
+            listener.onFileReadyToSave(historyId.toInt(), finalFile.name, header.offset + fileDataLen, finalFile.absolutePath)
 
             // 稍微延迟重置状态，让用户看到进度条到 100%
             delay(1000)

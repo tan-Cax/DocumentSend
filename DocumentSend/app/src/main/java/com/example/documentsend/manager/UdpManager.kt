@@ -27,6 +27,7 @@ class UdpManager private constructor() {
     private var sender: UdpSender? = null
     private var receiver: UdpReceiver? = null
     private var scope: CoroutineScope? = null
+    private var localUuid: String = ""
 
     private val _discoveredDevices = MutableStateFlow<List<DiscoveredDevice>>(emptyList())
     val discoveredDevices: StateFlow<List<DiscoveredDevice>> = _discoveredDevices.asStateFlow()
@@ -46,14 +47,18 @@ class UdpManager private constructor() {
 
     fun start(uuid: String, tcpPort: Int, deviceName: String) {
         if (scope != null) return
+        localUuid = uuid
         Logger.logInfo("Manager", "UdpStart", "UDP发现启动, uuid=$uuid, port=$tcpPort, name=$deviceName")
         scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
         receiver = UdpReceiver().also { it.start() }
-        sender = UdpSender(uuid, tcpPort, deviceName).also { it.start() }
+        sender = UdpSender(uuid, tcpPort, deviceName)
 
         scope!!.launch {
             receiver!!.received.collect { announce ->
+                // 跳过自己的广播
+                if (announce.uuid == localUuid) return@collect
+
                 val now = System.currentTimeMillis()
                 val current = _discoveredDevices.value.toMutableList()
                 val index = current.indexOfFirst { it.uuid == announce.uuid }
@@ -79,13 +84,18 @@ class UdpManager private constructor() {
                     )
                 }
                 _discoveredDevices.value = current
+
+                // 收到广播（reply=false）时回复
+                if (!announce.reply && announce.senderIp.isNotEmpty()) {
+                    sender?.replyTo(announce.senderIp)
+                }
             }
         }
     }
 
     fun refreshDevices() {
         _discoveredDevices.value = emptyList()
-        sender?.forceBroadcast()
+        sender?.broadcast()
     }
 
     fun stop() {

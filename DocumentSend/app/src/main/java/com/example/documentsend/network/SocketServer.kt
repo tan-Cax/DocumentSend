@@ -23,7 +23,8 @@ class SocketServer(
     private val context: Context,
     private val transferManager: TransferManager,
     private val historyRepository: HistoryRepository,
-    private val autoSave: Boolean = true
+    private val autoSave: Boolean = true,
+    saveToHistory: Boolean = true
 ) {
 
     private var serverSocket: ServerSocket? = null
@@ -32,13 +33,21 @@ class SocketServer(
     private var mainScope: CoroutineScope? = null
     private var serverScope: CoroutineScope? = null
 
+    private val textReceiver = TextPacketReceiver(historyRepository, saveToHistory)
+    private val fileReceiver = FilePacketReceiver(context, transferManager, historyRepository, autoSave, saveToHistory)
+
     private val receivers = mapOf<PacketType, IPacketReceiver>(
-        PacketType.TEXT to TextPacketReceiver(historyRepository),
-        PacketType.IMAGE to FilePacketReceiver(context, transferManager, historyRepository, autoSave),
-        PacketType.VIDEO to FilePacketReceiver(context, transferManager, historyRepository, autoSave),
-        PacketType.FILE to FilePacketReceiver(context, transferManager, historyRepository, autoSave),
-        PacketType.ARCHIVE to FilePacketReceiver(context, transferManager, historyRepository, autoSave)
+        PacketType.TEXT to textReceiver,
+        PacketType.IMAGE to fileReceiver,
+        PacketType.VIDEO to fileReceiver,
+        PacketType.FILE to fileReceiver,
+        PacketType.ARCHIVE to fileReceiver
     )
+
+    fun setSaveToHistory(enabled: Boolean) {
+        textReceiver.saveToHistory = enabled
+        fileReceiver.saveToHistory = enabled
+    }
 
     fun start(port: Int, listener: INetworkListener) {
         if (isRunning) {
