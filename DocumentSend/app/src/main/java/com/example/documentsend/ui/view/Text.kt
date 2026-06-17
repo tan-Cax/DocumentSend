@@ -63,7 +63,6 @@ fun Text(navController: NavController,
     ) { paddingValues ->
         Column(
             modifier = Modifier
-                .padding(paddingValues)
                 .padding(16.dp)
                 .fillMaxSize()
         ) {
