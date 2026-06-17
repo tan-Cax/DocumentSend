@@ -1,6 +1,7 @@
 package com.example.documentsend.viewmodel
 
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateSetOf
 import androidx.lifecycle.ViewModel
 import com.example.documentsend.log.Logger
 import java.util.regex.Pattern
@@ -16,14 +17,26 @@ class LogViewModel : ViewModel() {
     private val _logs = mutableStateListOf<LogEntry>()
     val logs: List<LogEntry> get() = _logs
 
+    val allTags = mutableStateListOf<String>()
+    val selectedTags = mutableStateSetOf<String>()
+
+    val filteredLogs: List<LogEntry>
+        get() = if (selectedTags.isEmpty()) {
+            logs
+        } else {
+            logs.filter { it.tag in selectedTags }
+        }
+
     fun loadLogs() {
         _logs.clear()
+        allTags.clear()
+        selectedTags.clear()
+
         val rawLogs = Logger.getLogs()
 
-        // Log format: yyyy-MM-dd HH:mm:ss.SSS [LEVEL] TAG: MESSAGE
-        // We use a regex to parse it.
-        // Example: 2026-06-12 10:00:00.000 [I] DocumentSend: Hello World
         val regex = Pattern.compile("""^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}) \[([DIWE])] (.*?): (.*)$""", Pattern.DOTALL)
+
+        val tagSet = mutableSetOf<String>()
 
         rawLogs.forEach { rawLog ->
             val matcher = regex.matcher(rawLog)
@@ -33,15 +46,33 @@ class LogViewModel : ViewModel() {
                 val tag = matcher.group(3) ?: ""
                 val message = matcher.group(4) ?: ""
                 _logs.add(LogEntry(timestamp, level, tag, message))
+                tagSet.add(tag)
             } else {
-                // Fallback for logs that don't match (e.g. stack traces)
-                // We might want to append these to the previous log entry's message
                 if (_logs.isNotEmpty()) {
                     val last = _logs.last()
                     _logs[_logs.size - 1] = last.copy(message = last.message + "\n" + rawLog)
                 }
             }
         }
+
+        allTags.addAll(tagSet.sorted())
+        selectedTags.addAll(tagSet)
+    }
+
+    fun toggleTag(tag: String) {
+        if (tag in selectedTags) {
+            selectedTags.remove(tag)
+        } else {
+            selectedTags.add(tag)
+        }
+    }
+
+    fun selectAllTags() {
+        selectedTags.clear()
+        selectedTags.addAll(allTags)
+    }
+
+    fun clearAllTags() {
+        selectedTags.clear()
     }
 }
-

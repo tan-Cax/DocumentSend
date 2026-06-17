@@ -6,7 +6,7 @@ data class UdpAnnounce(
     val type: String = "ANNOUNCE",
     val uuid: String,
     val device: String,
-    val receivePort: Int,
+    val tcpPort: Int,
     val deviceName: String = "",
     val senderIp: String = ""
 ) {
@@ -15,7 +15,7 @@ data class UdpAnnounce(
             put("type", type)
             put("uuid", uuid)
             put("device", device)
-            put("receivePort", receivePort)
+            put("tcpPort", tcpPort)
             put("deviceName", deviceName)
         }.toString()
     }
@@ -34,7 +34,7 @@ data class UdpAnnounce(
                     type = type,
                     uuid = obj.getString("uuid"),
                     device = obj.getString("device"),
-                    receivePort = obj.getInt("receivePort"),
+                    tcpPort = obj.getInt("tcpPort"),
                     deviceName = obj.optString("deviceName", "")
                 )
             } catch (e: Exception) {

@@ -38,6 +38,7 @@ public class UdpManager {
             try {
                 socket = new DatagramSocket(port);
                 socket.setBroadcast(true);
+                System.out.println("[UDP] Socket 已创建, 监听端口: " + port);
 
                 byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
 
@@ -50,6 +51,7 @@ public class UdpManager {
                         System.arraycopy(packet.getData(), packet.getOffset(), receivedData, 0, packet.getLength());
 
                         InetAddress senderAddress = packet.getAddress();
+                        System.out.println("[UDP] 收到数据, 来自: " + senderAddress.getHostAddress() + ":" + packet.getPort() + ", 大小: " + receivedData.length + " 字节");
 
                         if (receiveListener != null) {
                             receiveListener.accept(receivedData, senderAddress);
@@ -82,6 +84,7 @@ public class UdpManager {
         try {
             DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
             socket.send(packet);
+            System.out.println("[UDP] 发送数据, 目标: " + address.getHostAddress() + ":" + port + ", 大小: " + data.length + " 字节");
         } catch (IOException e) {
             NetworkErrorCallback.getInstance().generalError("UDP 发送失败: " + e.getMessage());
         }
@@ -98,6 +101,7 @@ public class UdpManager {
 
     public void stop() {
         isRunning = false;
+        System.out.println("[UDP] 正在停止...");
 
         if (socket != null && !socket.isClosed()) {
             socket.close();

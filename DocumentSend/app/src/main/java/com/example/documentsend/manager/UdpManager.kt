@@ -8,7 +8,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,7 +18,7 @@ data class DiscoveredDevice(
     val device: String,
     val deviceName: String,
     val ip: String,
-    val receivePort: Int,
+    val tcpPort: Int,
     val lastSeen: Long = System.currentTimeMillis()
 )
 
@@ -45,13 +44,13 @@ class UdpManager private constructor() {
         }
     }
 
-    fun start(uuid: String, receivePort: Int, deviceName: String) {
+    fun start(uuid: String, tcpPort: Int, deviceName: String) {
         if (scope != null) return
-        Logger.logInfo("Manager", "UdpStart", "UDP发现启动, uuid=$uuid, port=$receivePort, name=$deviceName")
+        Logger.logInfo("Manager", "UdpStart", "UDP发现启动, uuid=$uuid, port=$tcpPort, name=$deviceName")
         scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
         receiver = UdpReceiver().also { it.start() }
-        sender = UdpSender(uuid, receivePort, deviceName).also { it.start() }
+        sender = UdpSender(uuid, tcpPort, deviceName).also { it.start() }
 
         scope!!.launch {
             receiver!!.received.collect { announce ->
@@ -64,7 +63,7 @@ class UdpManager private constructor() {
                         device = announce.device,
                         deviceName = announce.deviceName,
                         ip = announce.senderIp,
-                        receivePort = announce.receivePort,
+                        tcpPort = announce.tcpPort,
                         lastSeen = now
                     )
                 } else {
@@ -74,7 +73,7 @@ class UdpManager private constructor() {
                             device = announce.device,
                             deviceName = announce.deviceName,
                             ip = announce.senderIp,
-                            receivePort = announce.receivePort,
+                            tcpPort = announce.tcpPort,
                             lastSeen = now
                         )
                     )
@@ -82,22 +81,10 @@ class UdpManager private constructor() {
                 _discoveredDevices.value = current
             }
         }
-
-        scope!!.launch {
-            while (true) {
-                delay(2000)
-                val now = System.currentTimeMillis()
-                val filtered = _discoveredDevices.value.filter {
-                    now - it.lastSeen < UdpAnnounce.DEVICE_TIMEOUT_MS
-                }
-                if (filtered.size != _discoveredDevices.value.size) {
-                    _discoveredDevices.value = filtered
-                }
-            }
-        }
     }
 
     fun refreshDevices() {
+        _discoveredDevices.value = emptyList()
         sender?.forceBroadcast()
     }
 

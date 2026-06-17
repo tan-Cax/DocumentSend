@@ -6,7 +6,7 @@ import java.util.UUID;
 public class AppConfig {
     private static final String DEFAULT_SAVE_DIR = System.getProperty("user.dir") + File.separator + "storage";
     private static final int DEFAULT_LISTEN_PORT = 6666;
-    private static final int DEFAULT_SEND_PORT = 50000;
+    private static final int DEFAULT_SEND_PORT = 50001;
     private static final String DEFAULT_USERNAME = "User";
     private static final String DEFAULT_TARGET_IP = "127.0.0.1";
 

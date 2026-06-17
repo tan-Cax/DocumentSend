@@ -35,7 +35,13 @@ public class DeviceDiscoveryPanel extends VBox {
 
         Label refreshIcon = new Label("\uD83D\uDD04");
         refreshIcon.setStyle("-fx-font-size: 16px; -fx-cursor: hand;");
-        refreshIcon.setOnMouseClicked(e -> refresh());
+        refreshIcon.setOnMousePressed(e -> {
+            refreshIcon.setStyle("-fx-font-size: 16px; -fx-cursor: hand; -fx-opacity: 0.5; -fx-scale-x: 0.9; -fx-scale-y: 0.9;");
+        });
+        refreshIcon.setOnMouseReleased(e -> {
+            refreshIcon.setStyle("-fx-font-size: 16px; -fx-cursor: hand; -fx-opacity: 1; -fx-scale-x: 1; -fx-scale-y: 1;");
+            refresh();
+        });
 
         header.getChildren().addAll(title, spacer, refreshIcon);
 
@@ -94,6 +100,7 @@ public class DeviceDiscoveryPanel extends VBox {
     private void refresh() {
         items.clear();
         if (udpService != null) {
+            udpService.clearDevices();
             udpService.sendBroadcast();
         }
     }

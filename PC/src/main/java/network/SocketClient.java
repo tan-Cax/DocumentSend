@@ -42,8 +42,13 @@ public class SocketClient {
      */
     @SuppressWarnings("unchecked")
     public void sendText(String text) {
+        sendText(text, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    public void sendText(String text, Runnable onSuccess) {
         if (dos == null) {
-            NetworkErrorCallback.getInstance().sendError("发送端未绑定到有效的连接");
+            NetworkErrorCallback.getInstance().textError("发送端未绑定到有效的连接");
             return;
         }
         new Thread(() -> {
@@ -52,8 +57,9 @@ public class SocketClient {
                 if (handler != null) {
                     handler.handleSend(text, dos);
                 }
+                if (onSuccess != null) onSuccess.run();
             } catch (IOException e) {
-                NetworkErrorCallback.getInstance().sendError("发送文本消息失败: " + e.getMessage());
+                NetworkErrorCallback.getInstance().textError("发送文本消息失败: " + e.getMessage());
             }
         }).start();
     }
@@ -63,6 +69,11 @@ public class SocketClient {
      */
     @SuppressWarnings("unchecked")
     public void sendFile(File file) {
+        sendFile(file, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    public void sendFile(File file, Runnable onSuccess) {
         if (dos == null) {
             NetworkErrorCallback.getInstance().sendError("发送端未绑定到有效的连接");
             return;
@@ -73,6 +84,7 @@ public class SocketClient {
                 if (handler != null) {
                     handler.handleSend(file, dos);
                 }
+                if (onSuccess != null) onSuccess.run();
             } catch (IOException e) {
                 NetworkErrorCallback.getInstance().sendError("发送文件失败: " + e.getMessage());
             }
@@ -84,6 +96,11 @@ public class SocketClient {
      */
     @SuppressWarnings("unchecked")
     public void sendTextTo(String text, String targetIp, int targetPort) {
+        sendTextTo(text, targetIp, targetPort, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    public void sendTextTo(String text, String targetIp, int targetPort, Runnable onSuccess) {
         new Thread(() -> {
             Socket socket = null;
             try {
@@ -93,9 +110,9 @@ public class SocketClient {
                 if (handler != null) {
                     handler.handleSend(text, out);
                 }
-                System.out.println("文本发送成功: " + targetIp + ":" + targetPort);
+                if (onSuccess != null) onSuccess.run();
             } catch (IOException e) {
-                NetworkErrorCallback.getInstance().sendError("发送文本失败: " + e.getMessage());
+                NetworkErrorCallback.getInstance().textError("发送文本失败: " + e.getMessage());
             } finally {
                 if (socket != null && !socket.isClosed()) {
                     try { socket.close(); } catch (IOException e) { /* ignore */ }
@@ -109,6 +126,11 @@ public class SocketClient {
      */
     @SuppressWarnings("unchecked")
     public void sendFileTo(File file, String targetIp, int targetPort) {
+        sendFileTo(file, targetIp, targetPort, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    public void sendFileTo(File file, String targetIp, int targetPort, Runnable onSuccess) {
         new Thread(() -> {
             Socket socket = null;
             try {
@@ -118,7 +140,7 @@ public class SocketClient {
                 if (handler != null) {
                     handler.handleSend(file, out);
                 }
-                System.out.println("文件发送成功: " + file.getName() + " → " + targetIp + ":" + targetPort);
+                if (onSuccess != null) onSuccess.run();
             } catch (IOException e) {
                 NetworkErrorCallback.getInstance().sendError("发送文件失败: " + e.getMessage());
             } finally {

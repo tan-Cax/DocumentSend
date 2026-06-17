@@ -20,6 +20,9 @@ interface HistoryDao {
     @Query("DELETE FROM History WHERE id = :historyId")
     suspend fun deleteHistory(historyId: Int)
 
+    @Query("DELETE FROM History")
+    suspend fun deleteAllHistory()
+
     @Query("SELECT * FROM History WHERE name = :fileName AND `offset` < totalLength LIMIT 1")
     suspend fun getUnfinishedTransfer(fileName: String): History?
 

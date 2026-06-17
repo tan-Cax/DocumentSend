@@ -134,11 +134,12 @@ public class FileTransferPage extends StackPane {
             }
             String targetIp = ipField.getText().trim();
             int targetPort = Integer.parseInt(portField.getText().trim());
-
-            appendText("[发送] " + selectedFile.getName() + " → " + targetIp + ":" + targetPort, Color.BLACK);
+            File fileRef = selectedFile;
 
             SocketClient sender = new SocketClient();
-            sender.sendFileTo(selectedFile, targetIp, targetPort);
+            sender.sendFileTo(selectedFile, targetIp, targetPort, () ->
+                Platform.runLater(() -> appendText("[发送] " + fileRef.getName() + " → " + targetIp + ":" + targetPort, Color.BLACK))
+            );
         });
 
         HBox btnBar = new HBox(15, chooseBtn, sendBtn);

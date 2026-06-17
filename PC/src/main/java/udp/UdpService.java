@@ -34,6 +34,7 @@ public class UdpService {
     }
 
     public void startListening(int port) {
+        System.out.println("[UDP] 服务启动, 本机UUID: " + localUuid + ", 监听端口: " + port);
         udpManager.startListening(port);
     }
 
@@ -54,12 +55,14 @@ public class UdpService {
             port = 9999;
         }
 
+        System.out.println("[UDP] 发送广播: " + json);
         udpManager.sendBroadcast(data, port);
     }
 
     private void handleReceive(byte[] data, InetAddress senderAddress) {
         try {
             String json = new String(data);
+            System.out.println("[UDP] 收到广播, 来自: " + senderAddress.getHostAddress() + ", 内容: " + json);
 
             UdpProtocol protocol = UdpProtocol.fromJson(json);
             if (protocol == null) {
@@ -89,12 +92,38 @@ public class UdpService {
             discoveredDevices.put(protocol.getUuid(), deviceInfo);
 
             if (isNewDevice && deviceListener != null) {
+                System.out.println("[UDP] 发现新设备: " + deviceInfo);
                 deviceListener.onDeviceDiscovered(deviceInfo);
+            } else if (!isNewDevice) {
+                System.out.println("[UDP] 已知设备更新: " + protocol.getUuid());
             }
+
+            replyToDevice(senderAddress);
 
         } catch (Exception e) {
             NetworkErrorCallback.getInstance().generalError("处理 UDP 数据异常: " + e.getMessage());
         }
+    }
+
+    private void replyToDevice(InetAddress targetAddress) {
+        UdpProtocol protocol = new UdpProtocol(
+                UdpProtocol.TYPE_ANNOUNCE,
+                localUuid,
+                localName,
+                UdpProtocol.DEVICE_PC,
+                localTcpPort
+        );
+
+        String json = protocol.toJson();
+        byte[] data = json.getBytes();
+
+        int port = udpManager.getListenPort();
+        if (port <= 0) {
+            port = 9999;
+        }
+
+        System.out.println("[UDP] 回复设备, 目标: " + targetAddress.getHostAddress() + ":" + port + ", 内容: " + json);
+        udpManager.send(data, targetAddress, port);
     }
 
     public Collection<DeviceInfo> getDiscoveredDevices() {

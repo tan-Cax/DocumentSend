@@ -8,7 +8,7 @@ import network.NetworkErrorCallback;
  * {
  *     "type": "ANNOUNCE",
  *     "uuid": "xxxxxxxx",
- *     "name": "我的设备",
+ *     "deviceName": "我的设备",
  *     "device": "pc",
  *     "tcpPort": 6666
  * }
@@ -42,7 +42,7 @@ public class UdpProtocol {
         return "{" +
                 "\"type\":\"" + escapeJson(type) + "\"," +
                 "\"uuid\":\"" + escapeJson(uuid) + "\"," +
-                "\"name\":\"" + escapeJson(name) + "\"," +
+                "\"deviceName\":\"" + escapeJson(name) + "\"," +
                 "\"device\":\"" + escapeJson(device) + "\"," +
                 "\"tcpPort\":" + tcpPort +
                 "}";
@@ -61,7 +61,7 @@ public class UdpProtocol {
 
             String type = extractStringValue(json, "type");
             String uuid = extractStringValue(json, "uuid");
-            String name = extractStringValueSafe(json, "name", "");
+            String name = extractStringValueSafe(json, "deviceName", "");
             String device = extractStringValue(json, "device");
             int tcpPort = extractIntValue(json, "tcpPort");
 

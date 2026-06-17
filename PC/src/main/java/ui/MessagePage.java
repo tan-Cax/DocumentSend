@@ -63,12 +63,12 @@ public class MessagePage extends StackPane {
 
             String targetIp = ipField.getText().trim();
             int targetPort = Integer.parseInt(portField.getText().trim());
-
-            appendText("[我] " + msg, Color.BLACK);
             inputArea.clear();
 
             SocketClient sender = new SocketClient();
-            sender.sendTextTo(msg, targetIp, targetPort);
+            sender.sendTextTo(msg, targetIp, targetPort, () ->
+                Platform.runLater(() -> appendText("[我] " + msg, Color.BLACK))
+            );
         });
 
         HBox sendBar = new HBox(10, inputArea, sendBtn);

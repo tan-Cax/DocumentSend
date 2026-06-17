@@ -28,4 +28,9 @@ class HistoryViewModel(application: Application) :
     suspend fun insertHistoryItem(item: History) =
         repository.insertHistory(item)
 
+    fun clearHistory() {
+        viewModelScope.launch {
+            repository.deleteAllHistory()
+        }
+    }
 }

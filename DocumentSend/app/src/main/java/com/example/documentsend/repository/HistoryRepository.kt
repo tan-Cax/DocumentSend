@@ -24,6 +24,11 @@ class HistoryRepository(private val dao: HistoryDao) {
         Logger.logInfo("Database", "DeleteHistory", "删除记录: id=$historyId")
     }
 
+    suspend fun deleteAllHistory() {
+        dao.deleteAllHistory()
+        Logger.logInfo("Database", "DeleteAllHistory", "清空所有历史记录")
+    }
+
     suspend fun getUnfinishedTransfer(fileName: String): History? {
         val result = dao.getUnfinishedTransfer(fileName)
         Logger.logInfo("Database", "QueryUnfinished", "查询未完成记录: file=$fileName, found=${result != null}")

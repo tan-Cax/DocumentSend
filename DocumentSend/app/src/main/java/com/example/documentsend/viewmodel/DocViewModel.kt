@@ -82,10 +82,10 @@ class DocViewModel(application: Application) :
         // 创建uuid并启动UDP广播
         viewModelScope.launch {
             val uuid = DeviceUuidUtils.getOrCreate(application)
-            val receivePort = settingsRepository.receivePortFlow.first()
+            val tcpPort = settingsRepository.receivePortFlow.first()
             val userName = settingsRepository.userNameFlow.first()
             fileState = fileState.copy(deviceUuid = uuid)
-            udpManager.start(uuid, receivePort, userName)
+            udpManager.start(uuid, tcpPort, userName)
         }
 
         // 收集局域网发现的设备
