@@ -1,6 +1,7 @@
 package ui;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import utils.AppConfig;
@@ -15,6 +16,10 @@ public class App extends Application {
         primaryStage.setScene(new Scene(new MainLayout(), 800, 500));
         primaryStage.setMinWidth(600);
         primaryStage.setMinHeight(400);
+        primaryStage.setOnCloseRequest(e -> {
+            Platform.exit();
+            System.exit(0);
+        });
         primaryStage.show();
     }
 
