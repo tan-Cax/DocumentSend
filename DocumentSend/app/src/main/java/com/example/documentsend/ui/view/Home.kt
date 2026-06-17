@@ -1,6 +1,7 @@
 package com.example.documentsend.ui.view
 
 import androidx.compose.foundation.background
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -24,9 +25,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.documentsend.ui.components.MainScaffold
-import com.example.documentsend.ui.theme.blue
-import com.example.documentsend.ui.theme.light_blue
-import com.example.documentsend.ui.theme.white
 import com.example.documentsend.viewmodel.DocViewModel
 
 @Composable
@@ -52,7 +50,7 @@ fun Home (navController: NavController,
     ) { paddingValues ->
         Column(
             modifier = Modifier
-                .background(white)
+                .background(MaterialTheme.colorScheme.background)
                 .fillMaxSize()
                 .padding(paddingValues),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -78,7 +76,7 @@ fun Home (navController: NavController,
                 },
                 shape = CircleShape,
                 modifier = Modifier.size(80.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = light_blue, contentColor = blue)
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)
             ) {
                 Icon(
                     imageVector = Icons.Default.Refresh,

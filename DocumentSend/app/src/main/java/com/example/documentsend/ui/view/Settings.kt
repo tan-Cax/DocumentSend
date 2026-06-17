@@ -35,7 +35,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import com.example.documentsend.navigation.Screen
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
@@ -45,9 +44,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.MaterialTheme
 import com.example.documentsend.ui.components.MainScaffold
-import com.example.documentsend.ui.theme.white
 import com.example.documentsend.viewmodel.SettingsViewModel
+import com.example.documentsend.ui.theme.DarkSwitchOff
+import com.example.documentsend.ui.theme.DarkSwitchOn
+import com.example.documentsend.ui.theme.LightSwitchOff
+import com.example.documentsend.ui.theme.LightSwitchOn
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -88,7 +92,7 @@ fun Settings(
     ) { paddingValues ->
         Column(
             modifier = Modifier
-                .background(white)
+                .background(MaterialTheme.colorScheme.background)
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -202,10 +206,10 @@ fun Settings(
                             horizontalArrangement = Arrangement.End,
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text(
-                                text = if (settingsState.savePath.isEmpty()) "默认" else settingsState.savePath,
-                                fontSize = 13.sp,
-                                color = Color.Gray,
+                    Text(
+                        text = if (settingsState.savePath.isEmpty()) "默认" else settingsState.savePath,
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier
                                     .weight(1f, fill = false)
                                     .padding(end = 8.dp),
@@ -230,7 +234,7 @@ fun Settings(
                     HorizontalDivider(
                         modifier = Modifier.padding(vertical = 8.dp),
                         thickness = 0.5.dp,
-                        color = Color(0xFFE0E0E0)
+                        color = MaterialTheme.colorScheme.outline
                     )
                 }
 
@@ -244,7 +248,7 @@ fun Settings(
                     ) {
                         Text(
                             text = "关于",
-                            color = Color(0xFF2196F3),
+                            color = MaterialTheme.colorScheme.primary,
                             fontSize = 14.sp,
                             modifier = Modifier.clickable {
                                 navController.navigate(Screen.About.route)
@@ -252,7 +256,7 @@ fun Settings(
                         )
                         Text(
                             text = "日志",
-                            color = Color(0xFF2196F3),
+                            color = MaterialTheme.colorScheme.primary,
                             fontSize = 14.sp,
                             modifier = Modifier.clickable {
                                 navController.navigate(Screen.Log.route)
@@ -281,7 +285,7 @@ fun SettingRow(
         Text(
             text = label,
             fontSize = 16.sp,
-            color = Color.Black
+            color = MaterialTheme.colorScheme.onSurface
         )
         content()
     }
@@ -305,20 +309,20 @@ fun SimpleDropdown(
             modifier = Modifier
                 .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                 .clip(RoundedCornerShape(8.dp))
-                .background(Color(0xFFF0F0F0))
+                .background(MaterialTheme.colorScheme.surfaceVariant)
                 .padding(horizontal = 12.dp, vertical = 8.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = selectedOption,
                     fontSize = 14.sp,
-                    color = Color.Black
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     text = if (expanded) "▲" else "▼",
                     fontSize = 10.sp,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -346,14 +350,15 @@ fun SimpleSwitch(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
+    val isDark = isSystemInDarkTheme()
     Switch(
         checked = checked,
         onCheckedChange = onCheckedChange,
         colors = SwitchDefaults.colors(
-            checkedThumbColor = Color.White,
-            checkedTrackColor = Color(0xFF4CAF50),
-            uncheckedThumbColor = Color.White,
-            uncheckedTrackColor = Color(0xFFBDBDBD)
+            checkedThumbColor = MaterialTheme.colorScheme.surface,
+            checkedTrackColor = if (isDark) DarkSwitchOn else LightSwitchOn,
+            uncheckedThumbColor = MaterialTheme.colorScheme.surface,
+            uncheckedTrackColor = if (isDark) DarkSwitchOff else LightSwitchOff
         )
     )
 }
@@ -367,14 +372,14 @@ fun SimpleButton(
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(8.dp))
-            .background(Color(0xFFF0F0F0))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         Text(
             text = text,
             fontSize = 14.sp,
-            color = Color.Black
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }
@@ -414,12 +419,12 @@ fun SettingInput(
         modifier = Modifier
             .width(180.dp)
             .clip(RoundedCornerShape(8.dp))
-            .background(Color(0xFFF5F5F5))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
             .padding(horizontal = 12.dp, vertical = 8.dp),
         singleLine = true,
         textStyle = TextStyle(
             fontSize = 14.sp,
-            color = Color.Black,
+            color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.End
         ),
         keyboardOptions = keyboardOptions,
@@ -429,7 +434,7 @@ fun SettingInput(
                     Text(
                         text = placeholder,
                         fontSize = 14.sp,
-                        color = Color.Gray,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.End
                     )
                 }

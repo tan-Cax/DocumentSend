@@ -12,6 +12,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.documentsend.R
+import com.example.documentsend.ui.theme.*
 import kotlinx.coroutines.delay
 
 @Composable
@@ -53,7 +54,7 @@ fun FirstLaunchDialog(
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = "请阅读并在 ${countdown}s 后关闭",
-                        color = Color.Red,
+                        color = red,
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )

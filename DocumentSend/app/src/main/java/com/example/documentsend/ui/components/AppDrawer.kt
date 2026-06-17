@@ -7,10 +7,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.documentsend.ui.theme.light_blue
-import com.example.documentsend.ui.theme.royal_blue
 
 @Composable
 fun AppDrawerContent(
@@ -19,16 +16,16 @@ fun AppDrawerContent(
 ) {
     ModalDrawerSheet(
         modifier = Modifier.width(280.dp),
-        drawerContainerColor = light_blue
+        drawerContainerColor = MaterialTheme.colorScheme.surfaceVariant
     ) {
         Spacer(Modifier.height(16.dp))
         Text(
             text = "Menu", 
             modifier = Modifier.padding(16.dp), 
             style = MaterialTheme.typography.titleLarge,
-            color = royal_blue
+            color = MaterialTheme.colorScheme.onSurface
         )
-        HorizontalDivider(color = Color.LightGray)
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline)
         NavigationDrawerItem(
             icon = { Icon(imageVector = Icons.Default.List, contentDescription = "History") },
             label = { Text("History") },

@@ -26,10 +26,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.compose.material3.MaterialTheme
 import com.example.documentsend.network.PacketType
 import com.example.documentsend.ui.components.MainScaffold
-import com.example.documentsend.ui.theme.blue
-import com.example.documentsend.ui.theme.light_blue
 import com.example.documentsend.viewmodel.DocViewModel
 
 @Composable
@@ -95,7 +94,7 @@ fun Text(navController: NavController,
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = light_blue, contentColor = blue)
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)
             ) {
                 Text("发送")
             }

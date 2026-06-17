@@ -17,6 +17,7 @@ import com.example.documentsend.viewmodel.DocViewModel
 import com.example.documentsend.viewmodel.HistoryViewModel
 import com.example.documentsend.viewmodel.SettingsViewModel
 import com.example.documentsend.ui.components.FirstLaunchDialog
+import com.example.documentsend.ui.theme.DocumentSendTheme
 
 @Composable
 fun AppNavigation() {
@@ -36,10 +37,14 @@ fun AppNavigation() {
 
     val viewmodel : DocViewModel = viewModel()
 
-    NavHost(
-        navController = navController,
-        startDestination = Screen.Home.route
-    ){
+    DocumentSendTheme(
+        themeMode = settingsState.themeMode,
+        colorScheme = settingsState.colorScheme
+    ) {
+        NavHost(
+            navController = navController,
+            startDestination = Screen.Home.route
+        ) {
         composable(
             route = Screen.Home.route
         ){
@@ -104,5 +109,6 @@ fun AppNavigation() {
                 navController = navController
             )
         }
+    }
     }
 }

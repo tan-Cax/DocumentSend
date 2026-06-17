@@ -47,11 +47,13 @@ import com.example.documentsend.data.History
 import com.example.documentsend.data.HistoryType
 import com.example.documentsend.manager.TransferDirection
 import com.example.documentsend.network.PacketType
+import androidx.compose.material3.MaterialTheme
 import com.example.documentsend.ui.components.MainScaffold
-import com.example.documentsend.ui.theme.dark_blue
-import com.example.documentsend.ui.theme.white
 import com.example.documentsend.utils.HistoryUtils
 import com.example.documentsend.viewmodel.DocViewModel
+import com.example.documentsend.ui.theme.LightError
+import com.example.documentsend.ui.theme.LightSuccess
+import com.example.documentsend.ui.theme.green
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -83,7 +85,7 @@ fun Receive(
     ) { paddingValues ->
         Column(
             modifier = Modifier
-                .background(white)
+                .background(MaterialTheme.colorScheme.background)
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -95,7 +97,7 @@ fun Receive(
                 text = state.userName,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -104,7 +106,7 @@ fun Receive(
             Text(
                 text = state.localIpAddress,
                 fontSize = 14.sp,
-                color = Color.Gray
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -115,20 +117,20 @@ fun Receive(
                 Text(
                     text = "正在接收: ${state.transferProgress.currentFileName}",
                     fontSize = 14.sp,
-                    color = Color.Black
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "$percent%",
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF2196F3)
+                    color = MaterialTheme.colorScheme.primary
                 )
             } else if (state.transferProgress.direction == TransferDirection.IDLE && state.transferProgress.progressPercent > 0) {
                 Text(
                     text = "最近接收完成",
                     fontSize = 14.sp,
-                    color = Color.Green
+                    color = green
                 )
             }
 
@@ -143,8 +145,8 @@ fun Receive(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .border(1.dp, Color.LightGray)
-                    .background(Color(0xFFFAFAFA))
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                    .background(MaterialTheme.colorScheme.surface)
                     .padding(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -168,29 +170,29 @@ fun Receive(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(
-                                text = HistoryUtils.formatTimestamp(record.timestamp),
-                                fontSize = 12.sp,
-                                color = Color.Gray
-                            )
-                            Text(
-                                text = if (isText) "[文本]" else "[文件]",
-                                fontSize = 12.sp,
-                                color = dark_blue
+                        Text(
+                            text = HistoryUtils.formatTimestamp(record.timestamp),
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = if (isText) "[文本]" else "[文件]",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.secondary
                             )
                         }
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = if (isText) record.text else record.name,
                             fontSize = 14.sp,
-                            color = Color.Black,
+                            color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 2
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = if (isCompleted) "✓ 成功" else "✗ 接收失败",
                             fontSize = 12.sp,
-                            color = if (isCompleted) Color(0xFF388E3C) else Color(0xFFD32F2F)
+                            color = if (isCompleted) LightSuccess else LightError
                         )
                     }
                 }
@@ -232,7 +234,7 @@ fun Receive(
             Text(
                 text = "自动保存：${if (state.autoSave) "开" else "关"}",
                 fontSize = 12.sp,
-                color = Color.DarkGray
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -243,14 +245,14 @@ fun Receive(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFFF5F5F5))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
                         .padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
                         text = "接收到了文件：${state.pendingSaveFileName}",
                         fontSize = 14.sp,
-                        color = Color.Black,
+                        color = MaterialTheme.colorScheme.onSurface,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(16.dp))

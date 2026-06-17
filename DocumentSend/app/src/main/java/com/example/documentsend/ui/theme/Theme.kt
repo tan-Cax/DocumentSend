@@ -10,72 +10,102 @@ import androidx.compose.runtime.Composable
 private val DefaultLightScheme = lightColorScheme(
     primary            = BluePrimary,
     onPrimary          = OnPrimaryWhite,
+    secondary          = BlueAccentVariant,
     background         = LightBackground,
-    surface            = LightSurface,
+    surface            = LightSessionListBg,
     onBackground       = LightOnBackground,
     onSurface          = LightOnSurface,
     surfaceVariant     = LightCardBackground,
     outline            = LightDivider,
+    primaryContainer   = LightSelectedHighlight,
+    error              = LightError,
+    outlineVariant     = LightUnselectedBorder,
+    onSurfaceVariant   = LightSecondaryText,
 )
 
 // 浅色-红色
 private val RedLightScheme = lightColorScheme(
     primary            = RedPrimary,
     onPrimary          = OnPrimaryWhite,
+    secondary          = RedAccent,
     background         = LightBackground,
-    surface            = LightSurface,
+    surface            = LightSessionListBg,
     onBackground       = LightOnBackground,
     onSurface          = LightOnSurface,
     surfaceVariant     = LightCardBackground,
     outline            = LightDivider,
+    primaryContainer   = LightSelectedHighlight,
+    error              = LightError,
+    outlineVariant     = LightUnselectedBorder,
+    onSurfaceVariant   = LightSecondaryText,
 )
 
 // 浅色-绿色
 private val GreenLightScheme = lightColorScheme(
     primary            = GreenPrimary,
     onPrimary          = OnPrimaryWhite,
+    secondary          = GreenAccent,
     background         = LightBackground,
-    surface            = LightSurface,
+    surface            = LightSessionListBg,
     onBackground       = LightOnBackground,
     onSurface          = LightOnSurface,
     surfaceVariant     = LightCardBackground,
     outline            = LightDivider,
+    primaryContainer   = LightSelectedHighlight,
+    error              = LightError,
+    outlineVariant     = LightUnselectedBorder,
+    onSurfaceVariant   = LightSecondaryText,
 )
 
 // 夜晚模式-蓝色（默认）
 private val DarkScheme = darkColorScheme(
     primary            = DarkPrimary,
     onPrimary          = OnPrimaryBlack,
+    secondary          = DarkPrimary,
     background         = DarkBackground,
-    surface            = DarkSurface,
+    surface            = DarkSessionListBg,
     onBackground       = DarkOnBackground,
     onSurface          = DarkOnSurface,
     surfaceVariant     = DarkCardBackground,
     outline            = DarkDivider,
+    primaryContainer   = DarkSelectedHighlight,
+    error              = DarkError,
+    outlineVariant     = DarkUnselectedBorder,
+    onSurfaceVariant   = DarkSecondaryText,
 )
 
 // 夜晚模式-红色
 private val RedDarkScheme = darkColorScheme(
     primary            = DarkRedPrimary,
     onPrimary          = OnPrimaryBlack,
+    secondary          = DarkRedPrimary,
     background         = DarkBackground,
-    surface            = DarkSurface,
+    surface            = DarkSessionListBg,
     onBackground       = DarkOnBackground,
     onSurface          = DarkOnSurface,
     surfaceVariant     = DarkCardBackground,
     outline            = DarkDivider,
+    primaryContainer   = DarkSelectedHighlight,
+    error              = DarkError,
+    outlineVariant     = DarkUnselectedBorder,
+    onSurfaceVariant   = DarkSecondaryText,
 )
 
 // 夜晚模式-绿色
 private val GreenDarkScheme = darkColorScheme(
     primary            = DarkGreenPrimary,
     onPrimary          = OnPrimaryBlack,
+    secondary          = DarkGreenPrimary,
     background         = DarkBackground,
-    surface            = DarkSurface,
+    surface            = DarkSessionListBg,
     onBackground       = DarkOnBackground,
     onSurface          = DarkOnSurface,
     surfaceVariant     = DarkCardBackground,
     outline            = DarkDivider,
+    primaryContainer   = DarkSelectedHighlight,
+    error              = DarkError,
+    outlineVariant     = DarkUnselectedBorder,
+    onSurfaceVariant   = DarkSecondaryText,
 )
 
 @Composable

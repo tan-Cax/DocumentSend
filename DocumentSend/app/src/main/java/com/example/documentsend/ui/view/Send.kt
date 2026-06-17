@@ -69,15 +69,12 @@ import com.example.documentsend.data.History
 import com.example.documentsend.data.HistoryType
 import com.example.documentsend.manager.DiscoveredDevice
 import com.example.documentsend.network.PacketType
+import androidx.compose.material3.MaterialTheme
 import com.example.documentsend.ui.components.MainScaffold
-import com.example.documentsend.ui.theme.blue
-import com.example.documentsend.ui.theme.dark_blue
-import com.example.documentsend.ui.theme.light_blue
-import com.example.documentsend.ui.theme.light_gray
-import com.example.documentsend.ui.theme.very_light_gray
-import com.example.documentsend.ui.theme.white
 import com.example.documentsend.utils.HistoryUtils
 import com.example.documentsend.viewmodel.DocViewModel
+import com.example.documentsend.ui.theme.LightError
+import com.example.documentsend.ui.theme.LightSuccess
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -109,7 +106,7 @@ fun Send(navController: NavController,
     ) { paddingValues ->
         Column(
             modifier = Modifier
-                .background(white)
+                .background(MaterialTheme.colorScheme.background)
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.Top
@@ -124,7 +121,7 @@ fun Send(navController: NavController,
                     onClick = {
                         viewModel.updateTransferType(PacketType.TEXT)
                         navController.navigate("text") },
-                    colors = ButtonDefaults.buttonColors(containerColor = very_light_gray, contentColor = dark_blue),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.size(80.dp),
                     contentPadding = PaddingValues(4.dp)
@@ -144,7 +141,7 @@ fun Send(navController: NavController,
                         filePicker.launch("image/*")
                         viewModel.updateTransferType(PacketType.IMAGE)
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = very_light_gray, contentColor = dark_blue),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.size(80.dp),
                     contentPadding = PaddingValues(4.dp)
@@ -175,7 +172,7 @@ fun Send(navController: NavController,
                                 .show()
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = very_light_gray, contentColor = dark_blue),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.size(80.dp),
                     contentPadding = PaddingValues(4.dp)
@@ -195,7 +192,7 @@ fun Send(navController: NavController,
                         filePicker.launch("*/*")
                         viewModel.updateTransferType(PacketType.FILE)
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = very_light_gray, contentColor = dark_blue),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.size(80.dp),
                     contentPadding = PaddingValues(4.dp)
@@ -215,7 +212,7 @@ fun Send(navController: NavController,
                         filePicker.launch("video/*")
                         viewModel.updateTransferType(PacketType.VIDEO)
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = very_light_gray, contentColor = dark_blue),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.size(80.dp),
                     contentPadding = PaddingValues(4.dp)
@@ -235,7 +232,7 @@ fun Send(navController: NavController,
                         filePicker.launch("application/zip")
                         viewModel.updateTransferType(PacketType.ARCHIVE)
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = very_light_gray, contentColor = dark_blue),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.size(80.dp),
                     contentPadding = PaddingValues(4.dp)
@@ -262,13 +259,13 @@ fun Send(navController: NavController,
                     text = "寻找设备",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Icon(
                     imageVector = Icons.Default.Refresh,
                     contentDescription = "刷新",
-                    tint = blue,
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier
                         .size(24.dp)
                         .clickable { viewModel.refreshUdp() }
@@ -281,7 +278,7 @@ fun Send(navController: NavController,
                 Text(
                     text = "暂无设备",
                     fontSize = 14.sp,
-                    color = Color.Gray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(vertical = 24.dp)
                 )
             } else {
@@ -300,10 +297,10 @@ fun Send(navController: NavController,
                                 .width(140.dp)
                                 .height(80.dp)
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(if (isSelected) Color(0xFFE3F2FD) else Color(0xFFF5F5F5))
+                                .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant)
                                 .border(
                                     width = if (isSelected) 2.dp else 1.dp,
-                                    color = if (isSelected) blue else Color.LightGray,
+                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
                                     shape = RoundedCornerShape(8.dp)
                                 )
                                 .clickable {
@@ -316,7 +313,7 @@ fun Send(navController: NavController,
                                 Icon(
                                     imageVector = if (device.device == "pc") Icons.Default.Computer else Icons.Default.Smartphone,
                                     contentDescription = null,
-                                    tint = if (isSelected) blue else Color.DarkGray,
+                                    tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.size(32.dp)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
@@ -325,13 +322,13 @@ fun Send(navController: NavController,
                                         text = device.deviceName,
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.Medium,
-                                        color = Color.Black,
+                                        color = MaterialTheme.colorScheme.onSurface,
                                         maxLines = 1
                                     )
                                     Text(
                                         text = device.ip,
                                         fontSize = 11.sp,
-                                        color = Color.Gray
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
@@ -372,7 +369,7 @@ fun Send(navController: NavController,
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = light_blue, contentColor = blue)
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)
             ) {
                 Text("发送")
             }
@@ -390,8 +387,8 @@ fun Send(navController: NavController,
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .border(1.dp, Color.LightGray)
-                    .background(Color(0xFFFAFAFA))
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                    .background(MaterialTheme.colorScheme.surface)
                     .padding(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -419,26 +416,26 @@ fun Send(navController: NavController,
                             Text(
                                 text = HistoryUtils.formatTimestamp(record.timestamp),
                                 fontSize = 12.sp,
-                                color = Color.Gray
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
                                 text = if (isText) "[文本]" else "[文件]",
                                 fontSize = 12.sp,
-                                color = dark_blue
+                                color = MaterialTheme.colorScheme.secondary
                             )
                         }
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = if (isText) record.text else record.name,
                             fontSize = 14.sp,
-                            color = Color.Black,
+                            color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 2
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = if (isCompleted) "✓ 成功" else "✗ 发送失败",
                             fontSize = 12.sp,
-                            color = if (isCompleted) Color(0xFF388E3C) else Color(0xFFD32F2F)
+                            color = if (isCompleted) LightSuccess else LightError
                         )
                     }
                 }

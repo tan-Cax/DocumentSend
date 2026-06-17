@@ -37,9 +37,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.compose.material3.MaterialTheme
 import com.example.documentsend.ui.components.MainScaffold
-import com.example.documentsend.ui.theme.white
 import com.example.documentsend.viewmodel.HistoryViewModel
+import com.example.documentsend.ui.theme.GreenVeryLight
+import com.example.documentsend.ui.theme.LightError
+import com.example.documentsend.ui.theme.LightSuccess
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -170,7 +173,7 @@ fun HistoryCard(history: com.example.documentsend.data.History, docViewModel: Do
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             // 左侧图标 + 中间文件信息 + 右侧大小和时间
@@ -183,13 +186,13 @@ fun HistoryCard(history: com.example.documentsend.data.History, docViewModel: Do
                     modifier = Modifier
                         .size(40.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(if (isSend) Color(0xFFE3F2FD) else Color(0xFFF1F8E9)),
+                        .background(if (isSend) MaterialTheme.colorScheme.primaryContainer else GreenVeryLight),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = if (isSend) Icons.Default.ArrowUpward else Icons.Default.ArrowDownward,
                         contentDescription = null,
-                        tint = if (isSend) Color(0xFF1976D2) else Color(0xFF388E3C),
+                        tint = if (isSend) MaterialTheme.colorScheme.secondary else LightSuccess,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -211,7 +214,7 @@ fun HistoryCard(history: com.example.documentsend.data.History, docViewModel: Do
                     Text(
                         text = "${if (isSend) "发送至: " else "来自: "}${history.targetIp.ifEmpty { "未知" }}",
                         fontSize = 12.sp,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -228,7 +231,7 @@ fun HistoryCard(history: com.example.documentsend.data.History, docViewModel: Do
                     Text(
                         text = dateStr,
                         fontSize = 12.sp,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -263,7 +266,7 @@ fun HistoryCard(history: com.example.documentsend.data.History, docViewModel: Do
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = if (isCompleted) "已完成" else "未完成",
-                color = if (isCompleted) Color(0xFF388E3C) else Color(0xFFD32F2F),
+                color = if (isCompleted) LightSuccess else LightError,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold
             )

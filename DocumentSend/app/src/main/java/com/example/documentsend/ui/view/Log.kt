@@ -19,9 +19,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.documentsend.ui.theme.*
 import com.example.documentsend.viewmodel.LogEntry
 import com.example.documentsend.viewmodel.LogViewModel
+import com.example.documentsend.ui.theme.blue
+import com.example.documentsend.ui.theme.gray
+import com.example.documentsend.ui.theme.green
+import com.example.documentsend.ui.theme.red
+import com.example.documentsend.ui.theme.white
+import com.example.documentsend.ui.theme.yellow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,10 +40,10 @@ fun Log(navController: NavController, viewModel: LogViewModel = viewModel()) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("日志", color = Color.White) },
+                title = { Text("日志", color = MaterialTheme.colorScheme.onPrimary) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "返回", tint = Color.White)
+                        Icon(Icons.Default.ArrowBack, contentDescription = "返回", tint = MaterialTheme.colorScheme.onPrimary)
                     }
                 },
                 actions = {
@@ -47,7 +52,7 @@ fun Log(navController: NavController, viewModel: LogViewModel = viewModel()) {
                             Icon(
                                 Icons.Default.FilterList,
                                 contentDescription = "筛选",
-                                tint = Color.White
+                                tint = MaterialTheme.colorScheme.onPrimary
                             )
                         }
 
@@ -84,7 +89,7 @@ fun Log(navController: NavController, viewModel: LogViewModel = viewModel()) {
                         }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = royal_blue)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
             )
         }
     ) { paddingValues ->
@@ -142,17 +147,17 @@ fun LogItem(entry: LogEntry) {
                 text = entry.tag,
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp,
-                color = black
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = entry.message,
                 fontSize = 14.sp,
-                color = black
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = entry.timestamp,
                 fontSize = 12.sp,
-                color = gray
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
