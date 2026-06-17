@@ -4,6 +4,7 @@ import network.NetworkErrorCallback;
 
 public class UdpProtocol {
     public static final String TYPE_ANNOUNCE = "ANNOUNCE";
+    public static final int UDP_PORT = 50001;
 
     public static final String DEVICE_PC = "pc";
     public static final String DEVICE_ANDROID = "android";

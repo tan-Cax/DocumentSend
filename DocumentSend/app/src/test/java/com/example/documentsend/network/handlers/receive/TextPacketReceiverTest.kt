@@ -3,6 +3,7 @@ package com.example.documentsend.network.handlers.receive
 import com.example.documentsend.network.PacketHeader
 import com.example.documentsend.network.PacketType
 import com.example.documentsend.network.handlers.INetworkListener
+import com.example.documentsend.repository.HistoryRepository
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
@@ -18,10 +19,12 @@ class TextPacketReceiverTest {
 
     private lateinit var receiver: TextPacketReceiver
     private lateinit var listener: INetworkListener
+    private lateinit var historyRepository: HistoryRepository
 
     @Before
     fun setup() {
-        receiver = TextPacketReceiver()
+        historyRepository = mockk(relaxed = true)
+        receiver = TextPacketReceiver(historyRepository)
         listener = mockk(relaxed = true)
     }
 
@@ -42,7 +45,7 @@ class TextPacketReceiverTest {
         dos.write(textBytes)
 
         val dis = DataInputStream(ByteArrayInputStream(baos.toByteArray()))
-        val result = receiver.receive(header, dis, listener)
+        val result = receiver.receive(header, dis, listener, "192.168.1.100")
 
         assertTrue(result.isSuccess)
         verify { listener.onTextMessage(text) }
@@ -62,7 +65,7 @@ class TextPacketReceiverTest {
         val dos = DataOutputStream(baos)
 
         val dis = DataInputStream(ByteArrayInputStream(baos.toByteArray()))
-        val result = receiver.receive(header, dis, listener)
+        val result = receiver.receive(header, dis, listener, "192.168.1.100")
 
         assertTrue(result.isSuccess)
         verify { listener.onTextMessage("") }
@@ -87,7 +90,7 @@ class TextPacketReceiverTest {
         dos.write(textBytes)
 
         val dis = DataInputStream(ByteArrayInputStream(baos.toByteArray()))
-        val result = receiver.receive(header, dis, listener)
+        val result = receiver.receive(header, dis, listener, "192.168.1.100")
 
         assertTrue(result.isSuccess)
         verify { listener.onTextMessage(text) }
@@ -110,7 +113,7 @@ class TextPacketReceiverTest {
         dos.write(textBytes)
 
         val dis = DataInputStream(ByteArrayInputStream(baos.toByteArray()))
-        val result = receiver.receive(header, dis, listener)
+        val result = receiver.receive(header, dis, listener, "192.168.1.100")
 
         assertTrue(result.isSuccess)
         verify { listener.onTextMessage(text) }
@@ -130,7 +133,7 @@ class TextPacketReceiverTest {
         val dos = DataOutputStream(baos)
 
         val dis = DataInputStream(ByteArrayInputStream(baos.toByteArray()))
-        val result = receiver.receive(header, dis, listener)
+        val result = receiver.receive(header, dis, listener, "192.168.1.100")
 
         assertTrue(result.isFailure)
     }

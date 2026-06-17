@@ -29,7 +29,10 @@ class UdpReceiver {
         scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
         scope!!.launch {
             try {
-                socket = DatagramSocket(UdpAnnounce.UDP_PORT)
+                //socket = DatagramSocket(UdpAnnounce.UDP_PORT)
+                socket = DatagramSocket(UdpAnnounce.UDP_PORT).apply {
+                    broadcast = true  // 允许接收广播数据包
+                }
                 val buffer = ByteArray(4096)
                 while (true) {
                     val packet = DatagramPacket(buffer, buffer.size)
@@ -37,8 +40,10 @@ class UdpReceiver {
                         socket?.receive(packet)
                         val json = String(packet.data, 0, packet.length)
                         val announce = UdpAnnounce.fromJson(json)?.copy(senderIp = packet.address.hostAddress ?: "") ?: continue
+                        Logger.logInfo("UDP", "PacketReceived", "来自: ${announce.senderIp}, uuid=${announce.uuid}, reply=${announce.reply}")
                         _received.tryEmit(announce)
-                    } catch (_: Exception) {
+                    } catch (e: Exception) {
+                        Logger.logError("UDP", "ReceiveError", e)
                     }
                 }
             } catch (_: Exception) {

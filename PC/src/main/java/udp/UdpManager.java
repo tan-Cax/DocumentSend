@@ -1,12 +1,14 @@
 package udp;
 
 import network.NetworkErrorCallback;
+import utils.NetworkUtils;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.util.List;
 import java.util.function.BiConsumer;
 
 /**
@@ -91,11 +93,17 @@ public class UdpManager {
     }
 
     public void sendBroadcast(byte[] data, int port) {
-        try {
-            InetAddress broadcastAddress = InetAddress.getByName("255.255.255.255");
-            send(data, broadcastAddress, port);
-        } catch (Exception e) {
-            NetworkErrorCallback.getInstance().generalError("UDP 广播发送失败: " + e.getMessage());
+
+        List<InetAddress> broadcasts =
+                NetworkUtils.getBroadcastAddresses();
+
+        for (InetAddress address : broadcasts) {
+
+            System.out.println(
+                    "[UDP] 广播发送到: "
+                            + address.getHostAddress());
+
+            send(data, address, port);
         }
     }
 

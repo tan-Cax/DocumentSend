@@ -79,6 +79,13 @@ public class DeviceDiscoveryPanel extends VBox {
             }
         });
 
+        deviceList.setOnMouseClicked(e -> {
+            DeviceInfo selected = deviceList.getSelectionModel().getSelectedItem();
+            if (selected != null && onDeviceSelected != null) {
+                onDeviceSelected.accept(selected);
+            }
+        });
+
         getChildren().addAll(header, deviceList);
     }
 

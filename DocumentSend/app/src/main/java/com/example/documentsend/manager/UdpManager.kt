@@ -88,6 +88,10 @@ class UdpManager private constructor() {
                 // 收到广播（reply=false）时回复
                 if (!announce.reply && announce.senderIp.isNotEmpty()) {
                     sender?.replyTo(announce.senderIp)
+                } else if (announce.reply) {
+                    Logger.logInfo("UDP", "SkipReply", "因 reply=true 跳过回复, 来自: ${announce.senderIp}")
+                } else if (announce.senderIp.isEmpty()) {
+                    Logger.logWarn("UDP", "SkipReply", "因 senderIp 为空跳过回复")
                 }
             }
         }

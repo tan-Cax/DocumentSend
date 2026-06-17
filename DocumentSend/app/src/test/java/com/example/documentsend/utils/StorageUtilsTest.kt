@@ -138,7 +138,7 @@ class StorageUtilsTest {
 
         val success = StorageUtils.renameToFinal(tempDir, "result.csv")
 
-        assertTrue(success)
+        assertTrue(success.exists())
         assertFalse(partial.exists())
         assertTrue(File(tempDir, "result.csv").exists())
         assertEquals("data", File(tempDir, "result.csv").readText())
@@ -148,7 +148,7 @@ class StorageUtilsTest {
     fun `renameToFinal should return false if partial does not exist`() {
         val success = StorageUtils.renameToFinal(tempDir, "missing.txt")
 
-        assertFalse(success)
+        assertFalse(success.exists())
     }
 
     // ==================== 组合测试 ====================
@@ -177,7 +177,7 @@ class StorageUtilsTest {
 
         val success = StorageUtils.renameToFinal(tempDir, fileName)
 
-        assertTrue(success)
+        assertTrue(success.exists())
         assertFalse(partial.exists())
         val final = File(tempDir, fileName)
         assertTrue(final.exists())

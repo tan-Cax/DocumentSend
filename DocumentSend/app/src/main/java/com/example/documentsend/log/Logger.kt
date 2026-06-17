@@ -18,6 +18,7 @@ object Logger {
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault())
     private val fileDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     private var logDir: File? = null
+    private var logFile: File? = null
 
     fun init(context: Context) {
         logDir = File(context.filesDir, "log").also { it.mkdirs() }
@@ -119,9 +120,11 @@ object Logger {
 
     fun saveToFile(): Boolean {
         return try {
-            val dir = logDir ?: return false
-            val dateStr = fileDateFormat.format(Date())
-            val file = File(dir, "app_$dateStr.log")
+            val file = logFile ?: run {
+                val dir = logDir ?: return false
+                val dateStr = fileDateFormat.format(Date())
+                File(dir, "app_$dateStr.log")
+            }
             synchronized(logs) {
                 file.appendText(logs.joinToString("\n") + "\n")
             }
@@ -130,6 +133,12 @@ object Logger {
             Log.e(TAG, "保存日志失败", e)
             false
         }
+    }
+
+    fun loadFromFile(): List<String> {
+        val file = logFile ?: return emptyList()
+        if (!file.exists()) return emptyList()
+        return file.readLines()
     }
 
     fun cleanOldLogs() {

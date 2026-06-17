@@ -215,7 +215,7 @@ class LoggerTest {
             // Inject logFile via reflection
             val field = Logger::class.java.getDeclaredField("logFile")
             field.isAccessible = true
-            field.set(null, logFile)
+            field.set(null, logFile as Any)
 
             Logger.d("saved message")
             Logger.i("another message")

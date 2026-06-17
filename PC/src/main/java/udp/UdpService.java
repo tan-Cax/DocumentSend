@@ -48,13 +48,8 @@ public class UdpService {
         String json = protocol.toJson();
         byte[] data = json.getBytes();
 
-        int port = udpManager.getListenPort();
-        if (port <= 0) {
-            port = 9999;
-        }
-
         System.out.println("[UDP] 发送广播: " + json);
-        udpManager.sendBroadcast(data, port);
+        udpManager.sendBroadcast(data, UdpProtocol.UDP_PORT);
     }
 
     private void handleReceive(byte[] data, InetAddress senderAddress) {
@@ -119,13 +114,8 @@ public class UdpService {
         String json = protocol.toJson();
         byte[] data = json.getBytes();
 
-        int port = udpManager.getListenPort();
-        if (port <= 0) {
-            port = 9999;
-        }
-
-        System.out.println("[UDP] 回复设备, 目标: " + targetAddress.getHostAddress() + ":" + port + ", 内容: " + json);
-        udpManager.send(data, targetAddress, port);
+        System.out.println("[UDP] 回复设备, 目标: " + targetAddress.getHostAddress() + ":" + UdpProtocol.UDP_PORT + ", 内容: " + json);
+        udpManager.send(data, targetAddress, UdpProtocol.UDP_PORT);
     }
 
     public Collection<DeviceInfo> getDiscoveredDevices() {

@@ -19,24 +19,29 @@ class UdpSender(
     fun broadcast() {
         Logger.logInfo("UDP", "ForceBroadcast", "手动发送UDP广播")
         CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val s = DatagramSocket().apply { broadcast = true }
-                val broadcastAddress = getBroadcastAddress() ?: run {
-                    Logger.logWarn("UDP", "ForceBroadcast", "无法获取广播地址")
-                    return@launch
+            val addresses = getBroadcastAddresses()
+            if (addresses.isEmpty()) {
+                Logger.logWarn("UDP", "ForceBroadcast", "无法获取广播地址")
+                return@launch
+            }
+            val announce = UdpAnnounce(
+                uuid = uuid,
+                device = "android",
+                tcpPort = tcpPort,
+                deviceName = deviceName,
+                reply = false
+            )
+            val data = announce.toJson().toByteArray()
+            for (addr in addresses) {
+                try {
+                    val s = DatagramSocket().apply { broadcast = true }
+                    val packet = DatagramPacket(data, data.size, addr, UdpAnnounce.UDP_PORT)
+                    s.send(packet)
+                    s.close()
+                    Logger.logInfo("UDP", "BroadcastSent", "广播发送到: ${addr.hostAddress}")
+                } catch (e: Exception) {
+                    Logger.logError("UDP", "BroadcastFailed", e)
                 }
-                val announce = UdpAnnounce(
-                    uuid = uuid,
-                    device = "android",
-                    tcpPort = tcpPort,
-                    deviceName = deviceName,
-                    reply = false
-                )
-                val data = announce.toJson().toByteArray()
-                val packet = DatagramPacket(data, data.size, broadcastAddress, UdpAnnounce.UDP_PORT)
-                s.send(packet)
-                s.close()
-            } catch (_: Exception) {
             }
         }
     }
@@ -67,43 +72,24 @@ class UdpSender(
         Logger.logInfo("UDP", "SenderStop", "UDP广播发送器停止")
     }
 
-    private fun getBroadcastAddress(): InetAddress? {
+    private fun getBroadcastAddresses(): List<InetAddress> {
+        val result = mutableListOf<InetAddress>()
         try {
-            val interfaces = NetworkInterface.getNetworkInterfaces()
+            val interfaces = NetworkInterface.getNetworkInterfaces() ?: return result
             while (interfaces.hasMoreElements()) {
-                val networkInterface = interfaces.nextElement()
-                if (networkInterface.isLoopback || !networkInterface.isUp) continue
-
-                val interfaceAddresses = networkInterface.interfaceAddresses
-                for (interfaceAddress in interfaceAddresses) {
-                    val address = interfaceAddress.address
-                    if (address is Inet4Address) {
-                        val prefixLength = interfaceAddress.networkPrefixLength
-                        val mask = prefixLengthToMask(prefixLength)
-                        val ip = address.address
-                        val broadcast = ByteArray(4)
-                        for (i in 0..3) {
-                            broadcast[i] = (ip[i].toInt() or (mask[i].toInt() xor 0xFF)).toByte()
-                        }
-                        return InetAddress.getByAddress(broadcast)
+                val ni = interfaces.nextElement()
+                if (!ni.isUp || ni.isLoopback || ni.isVirtual) continue
+                for (ia in ni.interfaceAddresses) {
+                    val broadcast = ia.broadcast ?: continue
+                    if (broadcast is Inet4Address) {
+                        result.add(broadcast)
+                        Logger.logInfo("UDP", "BroadcastAddr", "发现广播地址: ${broadcast.hostAddress}")
                     }
                 }
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Logger.logError("UDP", "BroadcastAddrError", e)
         }
-        return null
-    }
-
-    private fun prefixLengthToMask(prefixLength: Short): ByteArray {
-        val mask = ByteArray(4)
-        val fullBytes = prefixLength.toInt() / 8
-        val remainingBits = prefixLength.toInt() % 8
-        for (i in 0 until fullBytes) {
-            mask[i] = 0xFF.toByte()
-        }
-        if (fullBytes < 4 && remainingBits > 0) {
-            mask[fullBytes] = (0xFF shl (8 - remainingBits)).toByte()
-        }
-        return mask
+        return result
     }
 }

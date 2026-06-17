@@ -51,8 +51,8 @@ class FileTransferHandlerTest {
         DataInputStream dis = new DataInputStream(new ByteArrayInputStream(wire));
         PacketHeader header = PacketHeader.readFrom(dis);
 
-        assertEquals(srcFile.getName().length(), header.getNameLength());
-        assertEquals(srcFile.length(), header.getBodyLength());
+        assertEquals(srcFile.getName().getBytes(StandardCharsets.UTF_8).length, header.getNameLength());
+        assertEquals(header.getNameLength() + srcFile.length(), header.getBodyLength());
 
         AtomicReference<File> captured = new AtomicReference<>();
         INetworkListener listener = new INetworkListener() {
@@ -93,7 +93,7 @@ class FileTransferHandlerTest {
         DataInputStream dis = new DataInputStream(new ByteArrayInputStream(baos.toByteArray()));
         PacketHeader header = PacketHeader.readFrom(dis);
 
-        assertEquals(srcFile.length(), header.getBodyLength());
+        assertEquals(header.getNameLength() + srcFile.length(), header.getBodyLength());
 
         AtomicReference<File> captured = new AtomicReference<>();
         INetworkListener listener = new INetworkListener() {
