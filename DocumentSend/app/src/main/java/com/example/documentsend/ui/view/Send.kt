@@ -306,6 +306,7 @@ fun Send(navController: NavController,
                                 .clickable {
                                     selectedUuid = device.uuid
                                     viewModel.updateInputIp(device.ip)
+                                    viewModel.updatePort(device.tcpPort)
                                 }
                                 .padding(8.dp)
                         ) {

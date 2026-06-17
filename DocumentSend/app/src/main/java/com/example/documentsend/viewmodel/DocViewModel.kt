@@ -185,6 +185,10 @@ class DocViewModel(application: Application) :
     }
 
     fun refreshUdp() {
+        viewModelScope.launch {
+            val defaultPort = settingsRepository.sendPortFlow.first()
+            fileState = fileState.copy(port = defaultPort)
+        }
         udpManager.refreshDevices()
     }
 
@@ -296,6 +300,10 @@ class DocViewModel(application: Application) :
         viewModelScope.launch {
             settingsRepository.setTargetIp(ip)
         }
+    }
+
+    fun updatePort(port: Int) {
+        fileState = fileState.copy(port = port)
     }
 
     fun updateInputMessage(message: String) {
