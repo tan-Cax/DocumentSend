@@ -76,7 +76,7 @@ class FilePacketReceiver(
                     val read = dis.read(buffer, 0, toRead)
                     if (read == -1) break
 
-                    XorCipher.xor(buffer, 0, read)
+                    XorCipher.xor(buffer, 0, read, totalRead)
                     fos.write(buffer, 0, read)
                     totalRead += read
                     remainingBytes -= read

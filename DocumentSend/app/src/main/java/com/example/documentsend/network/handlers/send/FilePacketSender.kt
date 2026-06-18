@@ -55,7 +55,7 @@ class FilePacketSender(
             try {
                 var bytesRead: Int
                 while (content.inputStream.read(buffer).also { bytesRead = it } != -1) {
-                    XorCipher.xor(buffer, 0, bytesRead)
+                    XorCipher.xor(buffer, 0, bytesRead, totalSent)
                     dos.write(buffer, 0, bytesRead)
                     totalSent += bytesRead
 
