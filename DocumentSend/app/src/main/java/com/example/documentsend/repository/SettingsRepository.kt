@@ -55,7 +55,7 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
     }
 
     val sendPortFlow: Flow<Int> = dataStore.data.map { preferences ->
-        preferences[SEND_PORT_KEY] ?: 6666
+        preferences[SEND_PORT_KEY] ?: 50000
     }
 
     val receivePortFlow: Flow<Int> = dataStore.data.map { preferences ->

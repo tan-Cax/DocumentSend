@@ -7,7 +7,7 @@ data class SettingsState(
     val autoSave: Boolean = false,
     val colorScheme: String = "默认",
     val saveToHistory: Boolean = true,
-    val sendPort: Int = 6666,         // 发送端口
+    val sendPort: Int = 50000,         // 发送端口
     val receivePort: Int = 50000,     // 接收端口
     val savePath: String = "",        // 存储路径（空=默认路径）
     val isFirstLaunch: Int = 1,       // 是否首次启动
