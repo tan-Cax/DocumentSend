@@ -34,7 +34,7 @@ public class MessagePage extends StackPane {
 
         portField.setId("msgPortField");
         portField.setPromptText("端口");
-        portField.setText(String.valueOf(AppConfig.getSendPort()));
+        portField.setText(String.valueOf(AppConfig.getListenPort()));
         portField.setPrefWidth(70);
 
         HBox targetBar = new HBox(10, new Label("目标:"), ipField, portField);

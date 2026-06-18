@@ -44,7 +44,7 @@ public class FileTransferPage extends StackPane {
         deselectOnFocus(ipField);
 
         portField.setPromptText("端口");
-        portField.setText(String.valueOf(AppConfig.getSendPort()));
+        portField.setText(String.valueOf(AppConfig.getListenPort()));
         portField.setPrefWidth(70);
         deselectOnFocus(portField);
 
