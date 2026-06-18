@@ -3,6 +3,7 @@ package com.example.documentsend.network.handlers.send
 import com.example.documentsend.log.Logger
 import com.example.documentsend.network.PacketHeader
 import com.example.documentsend.network.PacketType
+import com.example.documentsend.utils.XorCipher
 import java.io.DataOutputStream
 
 class TextPacketSender : IPacketSender {
@@ -26,6 +27,7 @@ class TextPacketSender : IPacketSender {
             )
             header.writeTo(dos)
 
+            XorCipher.xor(messageBytes, 0, messageBytes.size)
             dos.write(messageBytes)
             dos.flush()
 

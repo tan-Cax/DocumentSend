@@ -4,6 +4,7 @@ import com.example.documentsend.log.Logger
 import com.example.documentsend.manager.TransferManager
 import com.example.documentsend.network.PacketHeader
 import com.example.documentsend.network.PacketType
+import com.example.documentsend.utils.XorCipher
 import com.example.documentsend.repository.HistoryRepository
 import java.io.DataOutputStream
 
@@ -54,6 +55,7 @@ class FilePacketSender(
             try {
                 var bytesRead: Int
                 while (content.inputStream.read(buffer).also { bytesRead = it } != -1) {
+                    XorCipher.xor(buffer, 0, bytesRead)
                     dos.write(buffer, 0, bytesRead)
                     totalSent += bytesRead
 

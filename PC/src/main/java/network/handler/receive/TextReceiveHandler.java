@@ -3,6 +3,7 @@ package network.handler.receive;
 import network.NetworkErrorCallback;
 import listener.INetworkListener;
 import protocol.PacketHeader;
+import utils.CryptoUtils;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -28,7 +29,7 @@ public class  TextReceiveHandler implements IReceiveHandler {
 
         byte[] bodyBytes = new byte[(int) bodyLength];
         dis.readFully(bodyBytes);
-        String text = new String(bodyBytes, StandardCharsets.UTF_8);
+        String text = new String(CryptoUtils.xor(bodyBytes), StandardCharsets.UTF_8);
 
         // 3. 触发回调
         if (listener != null) {

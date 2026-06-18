@@ -7,6 +7,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
+import utils.CryptoUtils;
 import static utils.FileTypeUtils.getTypeByFile;
 
 public class FileSendHandler implements ISendHandler<File>{
@@ -39,7 +40,7 @@ public class FileSendHandler implements ISendHandler<File>{
 
         header.writeTo(dos);
         dos.write(fileNameBytes);
-        dos.write(fileBytes);
+        dos.write(CryptoUtils.xor(fileBytes));
         dos.flush();
     }
 }

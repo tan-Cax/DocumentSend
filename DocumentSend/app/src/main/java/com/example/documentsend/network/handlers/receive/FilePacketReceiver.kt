@@ -6,6 +6,7 @@ import com.example.documentsend.data.HistoryType
 import com.example.documentsend.log.Logger
 import com.example.documentsend.manager.TransferManager
 import com.example.documentsend.network.PacketHeader
+import com.example.documentsend.utils.XorCipher
 import com.example.documentsend.network.handlers.INetworkListener
 import com.example.documentsend.repository.HistoryRepository
 import com.example.documentsend.utils.NetworkConfigUtils
@@ -75,6 +76,7 @@ class FilePacketReceiver(
                     val read = dis.read(buffer, 0, toRead)
                     if (read == -1) break
 
+                    XorCipher.xor(buffer, 0, read)
                     fos.write(buffer, 0, read)
                     totalRead += read
                     remainingBytes -= read

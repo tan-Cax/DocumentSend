@@ -5,6 +5,7 @@ import com.example.documentsend.data.HistoryType
 import com.example.documentsend.log.Logger
 import com.example.documentsend.network.PacketHeader
 import com.example.documentsend.network.PacketType
+import com.example.documentsend.utils.XorCipher
 import com.example.documentsend.network.handlers.INetworkListener
 import com.example.documentsend.repository.HistoryRepository
 import com.example.documentsend.utils.StreamUtils
@@ -30,6 +31,7 @@ class TextPacketReceiver(
 
             val bodyBytes = ByteArray(bodyLength.toInt())
             dis.readFully(bodyBytes)
+            XorCipher.xor(bodyBytes, 0, bodyBytes.size)
             val text = String(bodyBytes, Charsets.UTF_8)
             Logger.logInfo("Network", "TextReceive", "收到文本消息, 长度: ${text.length}")
 

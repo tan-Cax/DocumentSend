@@ -2,6 +2,7 @@ package network.handler.send;
 
 import protocol.PacketHeader;
 import protocol.PacketType;
+import utils.CryptoUtils;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -27,7 +28,7 @@ public class TextSendHandler implements ISendHandler<String> {
         header.writeTo(dos);
         
         // 3. 发送报体并刷新流
-        dos.write(textBytes);
+        dos.write(CryptoUtils.xor(textBytes));
         dos.flush();
     }
 }

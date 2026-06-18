@@ -3,6 +3,7 @@ package network.handler.receive;
 import listener.INetworkListener;
 import protocol.PacketHeader;
 import utils.AppConfig;
+import utils.CryptoUtils;
 
 import java.io.DataInputStream;
 import java.io.File;
@@ -53,13 +54,16 @@ public class FileReceiveHandler implements IReceiveHandler {
 
             byte[] buffer = new byte[BUFFER_SIZE];
             long remaining = bodyLength;
+            long fileOffset = offset;
 
             while (remaining > 0) {
                 int bytesToRead = (int) Math.min(buffer.length, remaining);
                 int bytesRead = dis.read(buffer, 0, bytesToRead);
                 if (bytesRead == -1) break;
 
+                CryptoUtils.xorInPlace(buffer, 0, bytesRead, fileOffset);
                 raf.write(buffer, 0, bytesRead);
+                fileOffset += bytesRead;
                 remaining -= bytesRead;
             }
 

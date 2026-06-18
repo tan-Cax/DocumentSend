@@ -6,6 +6,7 @@ import network.handler.send.TextSendHandler;
 import org.junit.jupiter.api.Test;
 import protocol.PacketHeader;
 import protocol.PacketType;
+import utils.CryptoUtils;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -84,7 +85,7 @@ class TextHandlerTest {
         dos.writeLong(0);
         dos.writeLong(5);
         dos.write("name".getBytes(StandardCharsets.UTF_8));
-        dos.write("hello".getBytes(StandardCharsets.UTF_8));
+        dos.write(CryptoUtils.xor("hello".getBytes(StandardCharsets.UTF_8)));
 
         DataInputStream dis = new DataInputStream(new ByteArrayInputStream(baos.toByteArray()));
         PacketHeader header = PacketHeader.readFrom(dis);
